@@ -1,0 +1,154 @@
+name: Publish Release
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: build-binaries
+  cancel-in-progress: true
+
+jobs:
+  manylinux64:
+    name: ManyLinux • ${{ matrix.build_arch }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        build_arch: [ "arm64", "amd64" ]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Load Production Image Cache
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.cache-production
+          key: ${{ matrix.build_arch }}-buildx-${{ hashFiles('docker/manylinux64.Dockerfile', 'requirements.txt') }}
+
+      - name: ARM64 prepare
+        if: matrix.build_arch == 'arm64'
+        run: echo BIN_NAME="cpa_manylinux_arm64" >> $GITHUB_ENV
+
+      - name: AMD64 prepare
+        if: matrix.build_arch == 'amd64'
+        run: echo BIN_NAME="cpa_manylinux_amd64" >> $GITHUB_ENV
+
+      - name: Load Image
+        run: |
+          docker load < /tmp/.cache-production/manylinux-${{ matrix.build_arch }}.tar.gz
+
+      - name: Run Image
+        run: |
+          docker run \
+              -v $(realpath .):/build \
+              --workdir /build \
+              manylinux-${{ matrix.build_arch }}:latest \
+              python3 -m nuitka --plugin-enable=numpy --standalone --onefile ./clod_py_api/main.py
+          mv main.bin ${{ env.BIN_NAME }}
+          gzip -9 -c ${{ env.BIN_NAME }} > ${{ env.BIN_NAME }}.gz
+
+      - name: Uploading binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: cpa_binaries
+          path: ./${{ env.BIN_NAME }}.gz
+          if-no-files-found: error
+
+      - name: Test binary
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          platforms: linux/${{ matrix.build_arch }}
+          push: false
+          file: docker/test_release.Dockerfile
+          build-args: CPA_NAME=${{ env.BIN_NAME }}
+
+#  manylinux:
+#    name: ManyLinux • armv7
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - uses: actions/checkout@v3
+#      - name: Set up QEMU
+#        uses: docker/setup-qemu-action@v2
+#
+#      - name: Setup Docker Buildx
+#        uses: docker/setup-buildx-action@v2
+#
+#      - name: Cache Docker Layers
+#        uses: actions/cache@v3
+#        with:
+#          path: /tmp/.buildx-cache
+#          key: armv7-buildx-${{ hashFiles('docker/build/manylinux.Dockerfile') }}
+#
+#      - name: ARM7 prepare
+#        run: echo BIN_NAME="cps_manylinux_armv7.bin" >> $GITHUB_ENV
+#
+#      - name: Build Image
+#        uses: docker/build-push-action@v3
+#        with:
+#          context: .
+#          platforms: linux/arm/v7
+#          push: false
+#          tags: manylinux-armv7:latest
+#          file: docker/build/manylinux.Dockerfile
+#          load: true
+#          cache-from: type=local,src=/tmp/.buildx-cache
+#          cache-to: type=local,dest=/tmp/.buildx-cache
+#
+#      - name: Run Image
+#        run: |
+#          docker run -v $(realpath .):/build manylinux-armv7:latest
+#          mv main.bin ${{ env.BIN_NAME }}
+#
+#      - name: Uploading binaries
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: cloud_srv_binaries
+#          path: ./${{ env.BIN_NAME }}
+#          if-no-files-found: error
+
+#  publish_release:
+#    needs: [manylinux64, manylinux]
+#    name: Publish Release
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - uses: actions/checkout@v3
+#      - name: Get release info
+#        id: get_release_info
+#        run: |
+#          RELEASE_VERSION=$(sed -n "s/^__version__.*\"\(.*\)\"$/\\1/p" ./_version.py)
+#          echo RELEASE_TAG="v$RELEASE_VERSION" >> $GITHUB_ENV
+#          CHANGELOG=$(grep -oPz "(?s)##\s\[$RELEASE_VERSION.+?(?=##\s\[|$)" ./CHANGELOG.md | tr -d '\0' | sed /^$/d | sed '1d')
+#          CHANGELOG=$(echo "$CHANGELOG" | sed '$!N;s/^###.*\n#/#/;P;D' | sed '$!N;s/^###.*\n#/#/;P;D' | sed '${/^###/d;}')
+#          if [ "$CHANGELOG" == "" ]; then
+#            echo "changelog is empty!"
+#            exit 1
+#          fi
+#          echo "CHANGELOG<<EOF" >> $GITHUB_ENV
+#          echo "$CHANGELOG" >> $GITHUB_ENV
+#          echo "EOF" >> $GITHUB_ENV
+#
+#      - name: Collect sdist and wheels
+#        uses: actions/download-artifact@v3
+#        with:
+#          name: cpa_binaries
+#          path: cpa_binaries
+#
+#      - name: Create release draft
+#        uses: ncipollo/release-action@v1.11.1
+#        with:
+#          name: ${{ env.RELEASE_TAG }}
+#          tag: ${{ env.RELEASE_TAG }}
+#          commit: ${{ github.ref }}
+#          draft: false
+#          body: ${{ env.CHANGELOG }}
+#          artifacts: wheelhouse/*
+#          token: ${{ secrets.GITHUB_TOKEN }}
+#          artifactErrorsFailBuild: true

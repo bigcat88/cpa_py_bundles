@@ -1,0 +1,115 @@
+name: Build Production Image
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: build-production-image
+  cancel-in-progress: true
+
+jobs:
+  manylinux64:
+    name: ManyLinux • ${{ matrix.build_arch }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        build_arch: [ "arm64", "amd64" ]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Load Base Image Cache
+        uses: actions/cache@v3
+        id: base-manylinux
+        with:
+          path: /tmp/.cache-base
+          key: ${{ matrix.build_arch }}-buildx-${{ hashFiles('docker/manylinux64.Dockerfile') }}
+
+      - name: Cache Production Image
+        uses: actions/cache@v3
+        id: production-manylinux
+        with:
+          path: /tmp/.cache-production
+          key: ${{ matrix.build_arch }}-buildx-${{ hashFiles('docker/manylinux64.Dockerfile', 'requirements.txt') }}
+
+      - name: Load Base Image
+        if: steps.production-manylinux.outputs.cache-hit != 'true'
+        run: |
+          docker load --input /tmp/.cache-base/base-manylinux-${{ matrix.build_arch }}.tar
+          mkdir /tmp/.cache-production
+
+      - name: Build Production Image
+        run: |
+          docker run \
+              --name manylinux-${{ matrix.build_arch }} \
+              -v $(realpath .):/build \
+              --workdir /build \
+              base-manylinux-${{ matrix.build_arch }}:latest \
+              python3 -m pip install -r ./requirements.txt
+          docker commit \
+              manylinux-${{ matrix.build_arch }} manylinux-${{ matrix.build_arch }}:latest
+          docker image save \
+              manylinux-${{ matrix.build_arch }}:latest | gzip > \
+              /tmp/.cache-production/manylinux-${{ matrix.build_arch }}.tar.gz
+
+      - name: Debug Step
+        run: |
+          ls -la /tmp/.cache-base/
+          ls -la /tmp/.cache-production/
+
+#  manylinux:
+#    name: ManyLinux • armv7
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - uses: actions/checkout@v3
+#      - name: Set up QEMU
+#        uses: docker/setup-qemu-action@v2
+#
+#      - name: Setup Docker Buildx
+#        uses: docker/setup-buildx-action@v2
+#
+#      - name: Load Base Image Cache
+#        uses: actions/cache@v3
+#        id: base-manylinux
+#        with:
+#          path: /tmp/.cache-base
+#          key: armv7-buildx-${{ hashFiles('docker/manylinux.Dockerfile') }}
+#
+#      - name: Cache Production Image
+#        uses: actions/cache@v3
+#        id: production-manylinux
+#        with:
+#          path: /tmp/.cache-production
+#          key: armv7-buildx-${{ hashFiles('docker/manylinux.Dockerfile', 'requirements.rxt') }}
+#
+#      - name: Load Base Image
+#        if: steps.production-manylinux.outputs.cache-hit != 'true'
+#        run: |
+#          docker load --input /tmp/.cache-base/base-manylinux-armv7.tar
+#          mkdir /tmp/.cache-production
+#
+#      - name: Build Production Image
+#        run: |
+#          docker run \
+#              --name manylinux-armv7 \
+#              -v $(realpath .):/build \
+#              --workdir /build \
+#              base-manylinux-armv7:latest \
+#              python3 -m pip install -r ./requirements.txt
+#          docker commit \
+#              manylinux-armv7 manylinux-armv7:latest
+#          docker image save \
+#              manylinux-armv7:latest | gzip > \
+#              /tmp/.cache-production/manylinux-armv7.tar.gz
+#
+#      - name: Debug Step
+#        run: |
+#          ls -la /tmp/.cache-base/
+#          ls -la /tmp/.cache-production/
