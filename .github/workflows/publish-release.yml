@@ -169,6 +169,6 @@ jobs:
           commit: ${{ github.ref }}
           draft: false
           body: ${{ env.CHANGELOG }}
-          artifacts: wheelhouse/*
+          artifacts: cpa_binaries/*
           token: ${{ secrets.GITHUB_TOKEN }}
           artifactErrorsFailBuild: true
