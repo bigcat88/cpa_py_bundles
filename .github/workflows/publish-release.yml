@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        build_arch: [ "arm64", "amd64", "arm/v7" ]
+        build_arch: [ "arm64" ]
 
     steps:
       - uses: actions/checkout@v3
@@ -28,25 +28,25 @@ jobs:
         if: matrix.build_arch == 'arm64'
         run: |
           echo BASE_DOCKER_FILE="docker/manylinux64.Dockerfile" >> $GITHUB_ENV
-          echo BASE_IMG_NAME="base-manylinux-arm64" >> $GITHUB_ENV
-          echo CONTAINER_NAME="manylinux-arm64" >> $GITHUB_ENV
-          echo PROD_IMG_NAME="prod-manylinux-arm64" >> $GITHUB_ENV
+          echo BUILD_PLATFORM="linux/arm64" >> $GITHUB_ENV
+          echo BIN_NAME="cpa_manylinux_arm64" >> $GITHUB_ENV
+          echo TEST_DISTRO_NAME="debian:10" >> $GITHUB_ENV
 
       - name: AMD64 prepare
         if: matrix.build_arch == 'amd64'
         run: |
           echo BASE_DOCKER_FILE="docker/manylinux64.Dockerfile" >> $GITHUB_ENV
-          echo BASE_IMG_NAME="base-manylinux-amd64" >> $GITHUB_ENV
-          echo CONTAINER_NAME="manylinux-amd64" >> $GITHUB_ENV
-          echo PROD_IMG_NAME="prod-manylinux-amd64" >> $GITHUB_ENV
+          echo BUILD_PLATFORM="linux/amd64" >> $GITHUB_ENV
+          echo BIN_NAME="cpa_manylinux_amd64" >> $GITHUB_ENV
+          echo TEST_DISTRO_NAME="debian:10" >> $GITHUB_ENV
 
       - name: ARM7 prepare
-        if: matrix.build_arch == 'arm/v7'
+        if: matrix.build_arch == 'armv7'
         run: |
           echo BASE_DOCKER_FILE="docker/manylinux.Dockerfile" >> $GITHUB_ENV
-          echo BASE_IMG_NAME="base-manylinux-arm7" >> $GITHUB_ENV
-          echo CONTAINER_NAME="manylinux-arm7" >> $GITHUB_ENV
-          echo PROD_IMG_NAME="prod-manylinux-arm7" >> $GITHUB_ENV
+          echo BUILD_PLATFORM="linux/arm/v7" >> $GITHUB_ENV
+          echo BIN_NAME="cpa_manylinux_armv7" >> $GITHUB_ENV
+          echo TEST_DISTRO_NAME="debian:11" >> $GITHUB_ENV
 
       - name: Load Production Image Cache
         uses: actions/cache@v3
@@ -54,22 +54,14 @@ jobs:
           path: /tmp/.cache-production
           key: ${{ matrix.build_arch }}-prod-${{ hashFiles(env.BASE_DOCKER_FILE, 'requirements.txt') }}
 
-      - name: ARM64 prepare
-        if: matrix.build_arch == 'arm64'
-        run: echo BIN_NAME="cpa_manylinux_arm64" >> $GITHUB_ENV
-
-      - name: AMD64 prepare
-        if: matrix.build_arch == 'amd64'
-        run: echo BIN_NAME="cpa_manylinux_amd64" >> $GITHUB_ENV
-
       - name: Load Image
         run: |
-          docker load < /tmp/.cache-production/manylinux-${{ matrix.build_arch }}.tar.gz
+          docker load < /tmp/.cache-production/prod-manylinux-${{ matrix.build_arch }}.tar.gz
 
       - name: Run Image
         run: |
           docker run \
-              --platform linux/${{ matrix.build_arch }} \
+              --platform ${{ env.BUILD_PLATFORM }} \
               -v $(realpath .):/build \
               --workdir /build \
               manylinux-${{ matrix.build_arch }}:latest \
@@ -88,10 +80,10 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          platforms: linux/${{ matrix.build_arch }}
+          platforms: ${{ env.BUILD_PLATFORM }}
           push: false
           file: docker/test_release.Dockerfile
-          build-args: CPA_NAME=${{ env.BIN_NAME }} DISTRO_NAME=debian:buster-slim
+          build-args: CPA_NAME=${{ env.BIN_NAME }} DISTRO_NAME=${{ env.TEST_DISTRO_NAME }}
 
 #  manylinux:
 #    name: ManyLinux • armv7
