@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        build_arch: [ "arm64", "amd64" ]
+        build_arch: [ "arm64", "amd64", "arm/v7" ]
 
     steps:
       - uses: actions/checkout@v3
@@ -24,11 +24,35 @@ jobs:
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v2
 
+      - name: ARM64 prepare
+        if: matrix.build_arch == 'arm64'
+        run: |
+          echo BASE_DOCKER_FILE="docker/manylinux64.Dockerfile" >> $GITHUB_ENV
+          echo BASE_IMG_NAME="base-manylinux-arm64" >> $GITHUB_ENV
+          echo CONTAINER_NAME="manylinux-arm64" >> $GITHUB_ENV
+          echo PROD_IMG_NAME="prod-manylinux-arm64" >> $GITHUB_ENV
+
+      - name: AMD64 prepare
+        if: matrix.build_arch == 'amd64'
+        run: |
+          echo BASE_DOCKER_FILE="docker/manylinux64.Dockerfile" >> $GITHUB_ENV
+          echo BASE_IMG_NAME="base-manylinux-amd64" >> $GITHUB_ENV
+          echo CONTAINER_NAME="manylinux-amd64" >> $GITHUB_ENV
+          echo PROD_IMG_NAME="prod-manylinux-amd64" >> $GITHUB_ENV
+
+      - name: ARM7 prepare
+        if: matrix.build_arch == 'arm/v7'
+        run: |
+          echo BASE_DOCKER_FILE="docker/manylinux.Dockerfile" >> $GITHUB_ENV
+          echo BASE_IMG_NAME="base-manylinux-arm7" >> $GITHUB_ENV
+          echo CONTAINER_NAME="manylinux-arm7" >> $GITHUB_ENV
+          echo PROD_IMG_NAME="prod-manylinux-arm7" >> $GITHUB_ENV
+
       - name: Load Production Image Cache
         uses: actions/cache@v3
         with:
           path: /tmp/.cache-production
-          key: ${{ matrix.build_arch }}-prod-${{ hashFiles('docker/manylinux64.Dockerfile', 'requirements.txt') }}
+          key: ${{ matrix.build_arch }}-prod-${{ hashFiles(env.BASE_DOCKER_FILE, 'requirements.txt') }}
 
       - name: ARM64 prepare
         if: matrix.build_arch == 'arm64'
@@ -115,8 +139,7 @@ jobs:
 #          if-no-files-found: error
 
   publish_release:
-#    needs: [manylinux64, manylinux]
-    needs: [manylinux64]
+    needs: [ manylinux ]
     name: Publish Release
     runs-on: ubuntu-latest
 

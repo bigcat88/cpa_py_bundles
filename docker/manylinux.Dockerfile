@@ -10,7 +10,12 @@ RUN \
     libffi-dev \
     wget \
     cmake \
-    python3-pip && \
+    python3-pip \
+    python3-dev \
+    gfortran \
+    libopenblas-dev \
+    liblapack-dev \
+    pkg-config && \
   echo "**** Installing Patchelf ****" && \
   git clone https://github.com/NixOS/patchelf.git && \
   cd patchelf && \
