@@ -28,27 +28,27 @@ jobs:
       - name: ARM64 prepare
         if: matrix.build_arch == 'arm64'
         run: |
-          echo DOCKER_FILE="docker/manylinux64.Dockerfile" >> $GITHUB_ENV
-          echo OUTPUT_IMG="base-manylinux-arm64" >> $GITHUB_ENV
+          echo BASE_DOCKER_FILE="docker/manylinux64.Dockerfile" >> $GITHUB_ENV
+          echo BASE_IMG_NAME="base-manylinux-arm64" >> $GITHUB_ENV
 
       - name: AMD64 prepare
         if: matrix.build_arch == 'amd64'
         run: |
-          echo DOCKER_FILE="docker/manylinux64.Dockerfile" >> $GITHUB_ENV
-          echo OUTPUT_IMG="base-manylinux-amd64" >> $GITHUB_ENV
+          echo BASE_DOCKER_FILE="docker/manylinux64.Dockerfile" >> $GITHUB_ENV
+          echo BASE_IMG_NAME="base-manylinux-amd64" >> $GITHUB_ENV
 
       - name: ARM7 prepare
         if: matrix.build_arch == 'arm/v7'
         run: |
-          echo DOCKER_FILE="docker/manylinux.Dockerfile" >> $GITHUB_ENV
-          echo OUTPUT_IMG="base-manylinux-arm7" >> $GITHUB_ENV
+          echo BASE_DOCKER_FILE="docker/manylinux.Dockerfile" >> $GITHUB_ENV
+          echo BASE_IMG_NAME="base-manylinux-arm7" >> $GITHUB_ENV
 
       - name: Cache Base Image
         uses: actions/cache@v3
         id: base-manylinux
         with:
           path: /tmp/.cache-base
-          key: ${{ matrix.build_arch }}-base-${{ hashFiles( env.DOCKER_FILE ) }}
+          key: ${{ matrix.build_arch }}-base-${{ hashFiles( env.BASE_DOCKER_FILE ) }}
 
       - name: Create Cache Dir
         if: steps.base-manylinux.outputs.cache-hit != 'true'
@@ -62,8 +62,8 @@ jobs:
           platforms: linux/${{ matrix.build_arch }}
           push: false
           tags: base-manylinux-${{ matrix.build_arch }}:latest
-          file: ${{ env.DOCKER_FILE }}
-          outputs: type=docker,dest=/tmp/.cache-base/${{ env.OUTPUT_IMG }}.tar
+          file: ${{ env.BASE_DOCKER_FILE }}
+          outputs: type=docker,dest=/tmp/.cache-base/${{ env.BASE_IMG_NAME }}.tar
 
       - name: Debug Step
         run: ls -la /tmp/.cache-base/

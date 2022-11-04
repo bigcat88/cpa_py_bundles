@@ -20,7 +20,8 @@ RUN \
     openjpeg-dev \
     nasm \
     gfortran \
-    openblas-dev && \
+    openblas-dev \
+    py3-scipy && \
   echo "**** Installing Patchelf ****" && \
   git clone https://github.com/NixOS/patchelf.git && \
   cd patchelf && \
