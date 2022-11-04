@@ -8,10 +8,15 @@ RUN \
     autoconf \
     automake \
     zlib1g-dev \
-    libssl-dev \
     libreadline-dev \
+    libncurses5-dev \
+    libdb-dev \
+    libpcap-dev \
     liblzma-dev \
     libbz2-dev \
+    openssl \
+    libssl-dev \
+    libcurl4-openssl-dev \
     uuid-dev \
     libffi-dev \
     wget && \

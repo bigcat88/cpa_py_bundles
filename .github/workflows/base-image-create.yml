@@ -86,3 +86,45 @@ jobs:
 
       - name: Debug Step
         run: ls -la /tmp/.cache-base/
+
+#  musllinux64:
+#    name: MuslLinux • ${{ matrix.build_arch }}
+#    runs-on: ubuntu-latest
+#    strategy:
+#      fail-fast: true
+#      matrix:
+##        build_arch: [ "arm64", "amd64" ]
+#        build_arch: [ "amd64" ]
+#
+#    steps:
+#      - uses: actions/checkout@v3
+#      - name: Set up QEMU
+#        uses: docker/setup-qemu-action@v2
+#
+#      - name: Setup Docker Buildx
+#        uses: docker/setup-buildx-action@v2
+#
+#      - name: Cache Base Image
+#        uses: actions/cache@v3
+#        id: base-musllinux
+#        with:
+#          path: /tmp/.cache-base
+#          key: ${{ matrix.build_arch }}-base-${{ hashFiles('docker/musllinux64.Dockerfile') }}
+#
+#      - name: Create Cache Dir
+#        if: steps.base-musllinux.outputs.cache-hit != 'true'
+#        run: mkdir /tmp/.cache-base
+#
+#      - name: Build Base Image
+#        if: steps.base-musllinux.outputs.cache-hit != 'true'
+#        uses: docker/build-push-action@v3
+#        with:
+#          context: .
+#          platforms: linux/${{ matrix.build_arch }}
+#          push: false
+#          tags: base-musllinux-${{ matrix.build_arch }}:latest
+#          file: docker/musllinux64.Dockerfile
+#          outputs: type=docker,dest=/tmp/.cache-base/base-musllinux-${{ matrix.build_arch }}.tar
+#
+#      - name: Debug Step
+#        run: ls -la /tmp/.cache-base/
