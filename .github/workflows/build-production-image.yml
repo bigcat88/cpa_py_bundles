@@ -29,14 +29,14 @@ jobs:
         id: base-manylinux
         with:
           path: /tmp/.cache-base
-          key: ${{ matrix.build_arch }}-buildx-${{ hashFiles('docker/manylinux64.Dockerfile') }}
+          key: ${{ matrix.build_arch }}-base-${{ hashFiles('docker/manylinux64.Dockerfile') }}
 
       - name: Cache Production Image
         uses: actions/cache@v3
         id: production-manylinux
         with:
           path: /tmp/.cache-production
-          key: ${{ matrix.build_arch }}-buildx-${{ hashFiles('docker/manylinux64.Dockerfile', 'requirements.txt') }}
+          key: ${{ matrix.build_arch }}-prod-${{ hashFiles('docker/manylinux64.Dockerfile', 'requirements.txt') }}
 
       - name: Load Base Image
         if: steps.production-manylinux.outputs.cache-hit != 'true'
@@ -80,14 +80,14 @@ jobs:
 #        id: base-manylinux
 #        with:
 #          path: /tmp/.cache-base
-#          key: armv7-buildx-${{ hashFiles('docker/manylinux.Dockerfile') }}
+#          key: armv7-base-${{ hashFiles('docker/manylinux.Dockerfile') }}
 #
 #      - name: Cache Production Image
 #        uses: actions/cache@v3
 #        id: production-manylinux
 #        with:
 #          path: /tmp/.cache-production
-#          key: armv7-buildx-${{ hashFiles('docker/manylinux.Dockerfile', 'requirements.rxt') }}
+#          key: armv7-prod-${{ hashFiles('docker/manylinux.Dockerfile', 'requirements.rxt') }}
 #
 #      - name: Load Base Image
 #        if: steps.production-manylinux.outputs.cache-hit != 'true'
