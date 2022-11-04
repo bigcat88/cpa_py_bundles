@@ -57,6 +57,7 @@ jobs:
       - name: Load Image
         run: |
           docker load < /tmp/.cache-production/prod-manylinux-${{ matrix.build_arch }}.tar.gz
+          echo $TEST_DISTRO_NAME
 
       - name: Run Image
         run: |
@@ -83,7 +84,9 @@ jobs:
           platforms: ${{ env.BUILD_PLATFORM }}
           push: false
           file: docker/test_release.Dockerfile
-          build-args: CPA_NAME=${{ env.BIN_NAME }} DISTRO_NAME=${{ env.TEST_DISTRO_NAME }}
+          build-args: |
+            CPA_NAME=${{ env.BIN_NAME }}
+            DISTRO_NAME=${{ env.TEST_DISTRO_NAME }}
 
 #  manylinux:
 #    name: ManyLinux • armv7
