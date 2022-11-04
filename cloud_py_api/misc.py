@@ -8,7 +8,7 @@ import pymysql
 import pywt
 import scipy
 
-from cloud_py_api.version import __version__
+from cloud_py_api._version import __version__
 
 
 def print_versions():
