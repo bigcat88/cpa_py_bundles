@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        build_arch: [ "arm64", "amd64", "armv7" ]
+        build_arch: [ "amd64" ]
 
     steps:
       - uses: actions/checkout@v3
@@ -34,7 +34,7 @@ jobs:
         if: matrix.build_arch == 'amd64'
         run: |
           echo BASE_DOCKER_FILE="docker/manylinux64.Dockerfile" >> $GITHUB_ENV
-          echo BUILD_PLATFORM="linux/arm64" >> $GITHUB_ENV
+          echo BUILD_PLATFORM="linux/amd64" >> $GITHUB_ENV
 
       - name: ARMv7 prepare
         if: matrix.build_arch == 'armv7'
@@ -47,7 +47,7 @@ jobs:
         id: base-manylinux
         with:
           path: /tmp/.cache-base
-          key: ${{ matrix.build_arch }}-base2-${{ hashFiles( env.BASE_DOCKER_FILE ) }}
+          key: ${{ matrix.build_arch }}-base-${{ hashFiles( env.BASE_DOCKER_FILE ) }}
 
       - name: Cache Production Image
         uses: actions/cache@v3
