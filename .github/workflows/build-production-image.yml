@@ -64,6 +64,7 @@ jobs:
           docker ps
 
       - name: Build Production Image
+        if: steps.production-manylinux.outputs.cache-hit != 'true'
         run: |
           docker run \
               --platform ${{ env.BUILD_PLATFORM }} \
