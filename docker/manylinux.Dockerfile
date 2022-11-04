@@ -15,7 +15,13 @@ RUN \
     gfortran \
     libopenblas-dev \
     liblapack-dev \
-    pkg-config && \
+    pkg-config \
+    zlib1g-dev \
+    libjpeg62-turbo-dev \
+    liblcms2-dev \
+    libwebp-dev \
+    libfribidi-dev \
+    libharfbuzz-dev && \
   echo "**** Installing Patchelf ****" && \
   git clone https://github.com/NixOS/patchelf.git && \
   cd patchelf && \
