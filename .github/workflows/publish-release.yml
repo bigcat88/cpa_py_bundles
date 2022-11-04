@@ -64,7 +64,7 @@ jobs:
               --platform ${{ env.BUILD_PLATFORM }} \
               -v $(realpath .):/build \
               --workdir /build \
-              manylinux-${{ matrix.build_arch }}:latest \
+              prod-manylinux-${{ matrix.build_arch }}:latest \
               python3 -m nuitka --plugin-enable=numpy --standalone --onefile ./cloud_py_api/main.py
           mv main.bin ${{ env.BIN_NAME }}
           gzip -9 -c ${{ env.BIN_NAME }} > ${{ env.BIN_NAME }}.gz
