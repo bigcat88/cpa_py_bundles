@@ -1,6 +1,6 @@
 [tool.coverage.run]
 cover_pylib = true
-include = ["*/pillow_heif/*"]
+include = ["*/cloud_py_api/*"]
 omit = ["*/tests/*"]
 
 [tool.coverage.report]

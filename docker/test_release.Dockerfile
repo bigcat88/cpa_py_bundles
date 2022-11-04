@@ -1,4 +1,6 @@
-FROM debian:buster-slim
+ARG DISTRO_NAME
+
+FROM $DISTRO_NAME
 
 COPY . /cpa
 

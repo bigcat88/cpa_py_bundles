@@ -66,7 +66,7 @@ jobs:
           platforms: linux/${{ matrix.build_arch }}
           push: false
           file: docker/test_release.Dockerfile
-          build-args: CPA_NAME=${{ env.BIN_NAME }}
+          build-args: CPA_NAME=${{ env.BIN_NAME }} DISTRO_NAME=debian:buster-slim
 
 #  manylinux:
 #    name: ManyLinux • armv7
@@ -113,42 +113,43 @@ jobs:
 #          path: ./${{ env.BIN_NAME }}
 #          if-no-files-found: error
 
-#  publish_release:
+  publish_release:
 #    needs: [manylinux64, manylinux]
-#    name: Publish Release
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#      - uses: actions/checkout@v3
-#      - name: Get release info
-#        id: get_release_info
-#        run: |
-#          RELEASE_VERSION=$(sed -n "s/^__version__.*\"\(.*\)\"$/\\1/p" ./_version.py)
-#          echo RELEASE_TAG="v$RELEASE_VERSION" >> $GITHUB_ENV
-#          CHANGELOG=$(grep -oPz "(?s)##\s\[$RELEASE_VERSION.+?(?=##\s\[|$)" ./CHANGELOG.md | tr -d '\0' | sed /^$/d | sed '1d')
-#          CHANGELOG=$(echo "$CHANGELOG" | sed '$!N;s/^###.*\n#/#/;P;D' | sed '$!N;s/^###.*\n#/#/;P;D' | sed '${/^###/d;}')
-#          if [ "$CHANGELOG" == "" ]; then
-#            echo "changelog is empty!"
-#            exit 1
-#          fi
-#          echo "CHANGELOG<<EOF" >> $GITHUB_ENV
-#          echo "$CHANGELOG" >> $GITHUB_ENV
-#          echo "EOF" >> $GITHUB_ENV
-#
-#      - name: Collect sdist and wheels
-#        uses: actions/download-artifact@v3
-#        with:
-#          name: cpa_binaries
-#          path: cpa_binaries
-#
-#      - name: Create release draft
-#        uses: ncipollo/release-action@v1.11.1
-#        with:
-#          name: ${{ env.RELEASE_TAG }}
-#          tag: ${{ env.RELEASE_TAG }}
-#          commit: ${{ github.ref }}
-#          draft: false
-#          body: ${{ env.CHANGELOG }}
-#          artifacts: wheelhouse/*
-#          token: ${{ secrets.GITHUB_TOKEN }}
-#          artifactErrorsFailBuild: true
+    needs: [manylinux64]
+    name: Publish Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Get release info
+        id: get_release_info
+        run: |
+          RELEASE_VERSION=$(sed -n "s/^__version__.*\"\(.*\)\"$/\\1/p" ./_version.py)
+          echo RELEASE_TAG="v$RELEASE_VERSION" >> $GITHUB_ENV
+          CHANGELOG=$(grep -oPz "(?s)##\s\[$RELEASE_VERSION.+?(?=##\s\[|$)" ./CHANGELOG.md | tr -d '\0' | sed /^$/d | sed '1d')
+          CHANGELOG=$(echo "$CHANGELOG" | sed '$!N;s/^###.*\n#/#/;P;D' | sed '$!N;s/^###.*\n#/#/;P;D' | sed '${/^###/d;}')
+          if [ "$CHANGELOG" == "" ]; then
+            echo "changelog is empty!"
+            exit 1
+          fi
+          echo "CHANGELOG<<EOF" >> $GITHUB_ENV
+          echo "$CHANGELOG" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Collect sdist and wheels
+        uses: actions/download-artifact@v3
+        with:
+          name: cpa_binaries
+          path: cpa_binaries
+
+      - name: Create release draft
+        uses: ncipollo/release-action@v1.11.1
+        with:
+          name: ${{ env.RELEASE_TAG }}
+          tag: ${{ env.RELEASE_TAG }}
+          commit: ${{ github.ref }}
+          draft: false
+          body: ${{ env.CHANGELOG }}
+          artifacts: wheelhouse/*
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifactErrorsFailBuild: true
