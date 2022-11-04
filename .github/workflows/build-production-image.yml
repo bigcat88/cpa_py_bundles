@@ -61,6 +61,7 @@ jobs:
         run: |
           docker load --input /tmp/.cache-base/base-manylinux-${{ matrix.build_arch }}.tar
           mkdir /tmp/.cache-production
+          docker ps
 
       - name: Build Production Image
         run: |
