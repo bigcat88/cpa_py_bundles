@@ -47,6 +47,7 @@ jobs:
       - name: Build Production Image
         run: |
           docker run \
+              --platform linux/${{ matrix.build_arch }} \
               --name manylinux-${{ matrix.build_arch }} \
               -v $(realpath .):/build \
               --workdir /build \
