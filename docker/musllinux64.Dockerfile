@@ -1,25 +1,29 @@
-#FROM ghcr.io/linuxserver/baseimage-alpine:3.14
-#
-#COPY .. /nuitka_testing
-#
-#RUN \
-#  apk add --no-cache \
-#    py3-pip \
-#    python3-dev \
-#    libtool \
-#    git \
-#    gcc \
-#    m4 \
-#    perl \
-#    alpine-sdk \
-#    cmake \
-#    fribidi-dev \
-#    harfbuzz-dev \
-#    jpeg-dev \
-#    lcms2-dev \
-#    openjpeg-dev \
-#    nasm \
-#    libde265-dev \
-#    py3-numpy \
-#    py3-pillow && \
-#  python3 -m pip install --upgrade pip
+FROM alpine:3.15
+
+RUN \
+  apk add --no-cache \
+    py3-pip \
+    python3-dev \
+    libtool \
+    git \
+    gcc \
+    m4 \
+    perl \
+    alpine-sdk \
+    autoconf \
+    automake \
+    cmake \
+    fribidi-dev \
+    harfbuzz-dev \
+    jpeg-dev \
+    lcms2-dev \
+    openjpeg-dev \
+    nasm \
+    gfortran \
+    openblas-dev && \
+  echo "**** Installing Patchelf ****" && \
+  git clone https://github.com/NixOS/patchelf.git && \
+  cd patchelf && \
+  ./bootstrap.sh && ./configure && make && make install && \
+  cd .. && \
+  python3 -m pip install --upgrade pip

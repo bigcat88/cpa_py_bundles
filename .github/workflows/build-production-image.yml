@@ -100,6 +100,7 @@ jobs:
 #        run: |
 #          docker run \
 #              --name manylinux-armv7 \
+#              --platform linux/arm/v7 \
 #              -v $(realpath .):/build \
 #              --workdir /build \
 #              base-manylinux-armv7:latest \

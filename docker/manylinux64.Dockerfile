@@ -14,4 +14,5 @@ RUN \
   git clone https://github.com/NixOS/patchelf.git && \
   cd patchelf && \
   ./bootstrap.sh && ./configure && make && make install && \
+  cd .. && \
   python3 -m pip install --upgrade pip
