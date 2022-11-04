@@ -29,18 +29,24 @@ jobs:
         run: |
           echo BASE_DOCKER_FILE="docker/manylinux64.Dockerfile" >> $GITHUB_ENV
           echo BASE_IMG_NAME="base-manylinux-arm64" >> $GITHUB_ENV
+          echo CONTAINER_NAME="manylinux-arm64" >> $GITHUB_ENV
+          echo PROD_IMG_NAME="prod-manylinux-arm64" >> $GITHUB_ENV
 
       - name: AMD64 prepare
         if: matrix.build_arch == 'amd64'
         run: |
           echo BASE_DOCKER_FILE="docker/manylinux64.Dockerfile" >> $GITHUB_ENV
           echo BASE_IMG_NAME="base-manylinux-amd64" >> $GITHUB_ENV
+          echo CONTAINER_NAME="manylinux-amd64" >> $GITHUB_ENV
+          echo PROD_IMG_NAME="prod-manylinux-amd64" >> $GITHUB_ENV
 
       - name: ARM7 prepare
         if: matrix.build_arch == 'arm/v7'
         run: |
           echo BASE_DOCKER_FILE="docker/manylinux.Dockerfile" >> $GITHUB_ENV
           echo BASE_IMG_NAME="base-manylinux-arm7" >> $GITHUB_ENV
+          echo CONTAINER_NAME="manylinux-arm7" >> $GITHUB_ENV
+          echo PROD_IMG_NAME="prod-manylinux-arm7" >> $GITHUB_ENV
 
       - name: Load Base Image Cache
         uses: actions/cache@v3
@@ -66,16 +72,16 @@ jobs:
         run: |
           docker run \
               --platform linux/${{ matrix.build_arch }} \
-              --name manylinux-${{ matrix.build_arch }} \
+              --name ${{ env.CONTAINER_NAME }} \
               -v $(realpath .):/build \
               --workdir /build \
               base-manylinux-${{ matrix.build_arch }}:latest \
               python3 -m pip install -r ./requirements.txt
           docker commit \
-              manylinux-${{ matrix.build_arch }} manylinux-${{ matrix.build_arch }}:latest
+              ${{ env.CONTAINER_NAME }} manylinux-${{ matrix.build_arch }}:latest
           docker image save \
               manylinux-${{ matrix.build_arch }}:latest | gzip > \
-              /tmp/.cache-production/manylinux-${{ matrix.build_arch }}.tar.gz
+              /tmp/.cache-production/${{ env.PROD_IMG_NAME }}.tar.gz
 
       - name: Debug Step
         run: |
