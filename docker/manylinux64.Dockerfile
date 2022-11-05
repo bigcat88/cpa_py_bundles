@@ -13,6 +13,7 @@ RUN \
   echo "**** Installing Patchelf ****" && \
   git clone https://github.com/NixOS/patchelf.git && \
   cd patchelf && \
-  ./bootstrap.sh && ./configure && make && make check && make install && \
-  cd .. && \
-  python3 -m pip install --upgrade pip
+  ./bootstrap.sh && ./configure && make && make check || true && cat tests/test-suite.log
+#    && make install && \
+#  cd .. && \
+#  python3 -m pip install --upgrade pip
