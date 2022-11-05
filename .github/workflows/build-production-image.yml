@@ -8,7 +8,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  manylinux64:
+  manylinux:
     name: ManyLinux • ${{ matrix.build_arch }}
     runs-on: ubuntu-latest
     strategy:
@@ -78,6 +78,82 @@ jobs:
           docker image save \
               prod-manylinux-${{ matrix.build_arch }}:latest | gzip > \
               /tmp/.cache-production/prod-manylinux-${{ matrix.build_arch }}.tar.gz
+
+      - name: Debug Step
+        run: |
+          ls -la /tmp/.cache-base/
+          ls -la /tmp/.cache-production/
+
+  musllinux:
+    name: MuslLinux • ${{ matrix.build_arch }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        build_arch: [ "amd64" ]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: ARM64 prepare
+        if: matrix.build_arch == 'arm64'
+        run: |
+          echo BASE_DOCKER_FILE="docker/musllinux.Dockerfile" >> $GITHUB_ENV
+          echo BUILD_PLATFORM="linux/arm64" >> $GITHUB_ENV
+
+      - name: AMD64 prepare
+        if: matrix.build_arch == 'amd64'
+        run: |
+          echo BASE_DOCKER_FILE="docker/musllinux.Dockerfile" >> $GITHUB_ENV
+          echo BUILD_PLATFORM="linux/amd64" >> $GITHUB_ENV
+
+      - name: ARMv7 prepare
+        if: matrix.build_arch == 'armv7'
+        run: |
+          echo BASE_DOCKER_FILE="docker/musllinux.Dockerfile" >> $GITHUB_ENV
+          echo BUILD_PLATFORM="linux/arm/v7" >> $GITHUB_ENV
+
+      - name: Load Base Image Cache
+        uses: actions/cache@v3
+        id: base-musllinux
+        with:
+          path: /tmp/.cache-base
+          key: ${{ matrix.build_arch }}-base-${{ hashFiles( env.BASE_DOCKER_FILE ) }}
+
+      - name: Cache Production Image
+        uses: actions/cache@v3
+        id: production-musllinux
+        with:
+          path: /tmp/.cache-production
+          key: ${{ matrix.build_arch }}-prod-${{ hashFiles(env.BASE_DOCKER_FILE, 'requirements.txt') }}
+
+      - name: Load Base Image
+        if: steps.production-musllinux.outputs.cache-hit != 'true'
+        run: |
+          docker load --input /tmp/.cache-base/base-musllinux-${{ matrix.build_arch }}.tar
+          mkdir /tmp/.cache-production
+          docker ps
+
+      - name: Build Production Image
+        if: steps.production-musllinux.outputs.cache-hit != 'true'
+        run: |
+          docker run \
+              --platform ${{ env.BUILD_PLATFORM }} \
+              --name prod-musllinux-${{ matrix.build_arch }} \
+              -v $(realpath .):/build \
+              --workdir /build \
+              base-musllinux-${{ matrix.build_arch }}:latest \
+              python3 -m pip install -r ./requirements.txt
+          docker commit \
+              prod-musllinux-${{ matrix.build_arch }} prod-musllinux-${{ matrix.build_arch }}:latest
+          docker image save \
+              prod-musllinux-${{ matrix.build_arch }}:latest | gzip > \
+              /tmp/.cache-production/prod-musllinux-${{ matrix.build_arch }}.tar.gz
 
       - name: Debug Step
         run: |
