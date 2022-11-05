@@ -13,7 +13,9 @@ RUN \
   echo "**** Installing Patchelf ****" && \
   git clone https://github.com/NixOS/patchelf.git && \
   cd patchelf && \
-  ./bootstrap.sh && ./configure && make && make check || true && cat tests/test-suite.log
+  ./bootstrap.sh && ./configure && make && make check || true && \
+  cat tests/replace-add-needed.sh.log && echo "***" && \
+  cat tests/set-interpreter-long.sh.log
 #    && make install && \
 #  cd .. && \
 #  python3 -m pip install --upgrade pip
