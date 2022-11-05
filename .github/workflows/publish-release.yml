@@ -12,7 +12,7 @@ jobs:
     name: ManyLinux • ${{ matrix.build_arch }}
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         build_arch: [ "arm64", "amd64", "armv7" ]
 
@@ -55,9 +55,7 @@ jobs:
           key: ${{ matrix.build_arch }}-prod-${{ hashFiles(env.BASE_DOCKER_FILE, 'requirements.txt') }}
 
       - name: Load Image
-        run: |
-          docker load < /tmp/.cache-production/prod-manylinux-${{ matrix.build_arch }}.tar.gz
-          echo $TEST_DISTRO_NAME
+        run: docker load < /tmp/.cache-production/prod-manylinux-${{ matrix.build_arch }}.tar.gz
 
       - name: Run Image
         run: |
@@ -88,53 +86,86 @@ jobs:
             CPA_NAME=${{ env.BIN_NAME }}
             DISTRO_NAME=${{ env.TEST_DISTRO_NAME }}
 
-#  manylinux:
-#    name: ManyLinux • armv7
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#      - uses: actions/checkout@v3
-#      - name: Set up QEMU
-#        uses: docker/setup-qemu-action@v2
-#
-#      - name: Setup Docker Buildx
-#        uses: docker/setup-buildx-action@v2
-#
-#      - name: Cache Docker Layers
-#        uses: actions/cache@v3
-#        with:
-#          path: /tmp/.buildx-cache
-#          key: armv7-buildx-${{ hashFiles('docker/build/manylinux.Dockerfile') }}
-#
-#      - name: ARM7 prepare
-#        run: echo BIN_NAME="cps_manylinux_armv7.bin" >> $GITHUB_ENV
-#
-#      - name: Build Image
-#        uses: docker/build-push-action@v3
-#        with:
-#          context: .
-#          platforms: linux/arm/v7
-#          push: false
-#          tags: manylinux-armv7:latest
-#          file: docker/build/manylinux.Dockerfile
-#          load: true
-#          cache-from: type=local,src=/tmp/.buildx-cache
-#          cache-to: type=local,dest=/tmp/.buildx-cache
-#
-#      - name: Run Image
-#        run: |
-#          docker run -v $(realpath .):/build manylinux-armv7:latest
-#          mv main.bin ${{ env.BIN_NAME }}
-#
-#      - name: Uploading binaries
-#        uses: actions/upload-artifact@v3
-#        with:
-#          name: cloud_srv_binaries
-#          path: ./${{ env.BIN_NAME }}
-#          if-no-files-found: error
+  musllinux:
+    name: MuslLinux • ${{ matrix.build_arch }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        build_arch: [ "arm64", "amd64", "armv7" ]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: ARM64 prepare
+        if: matrix.build_arch == 'arm64'
+        run: |
+          echo BASE_DOCKER_FILE="docker/musllinux.Dockerfile" >> $GITHUB_ENV
+          echo BUILD_PLATFORM="linux/arm64" >> $GITHUB_ENV
+          echo BIN_NAME="cpa_musllinux_arm64" >> $GITHUB_ENV
+          echo TEST_DISTRO_NAME="alpine:3.15" >> $GITHUB_ENV
+
+      - name: AMD64 prepare
+        if: matrix.build_arch == 'amd64'
+        run: |
+          echo BASE_DOCKER_FILE="docker/musllinux.Dockerfile" >> $GITHUB_ENV
+          echo BUILD_PLATFORM="linux/amd64" >> $GITHUB_ENV
+          echo BIN_NAME="cpa_musllinux_amd64" >> $GITHUB_ENV
+          echo TEST_DISTRO_NAME="alpine:3.15" >> $GITHUB_ENV
+
+      - name: ARM7 prepare
+        if: matrix.build_arch == 'armv7'
+        run: |
+          echo BASE_DOCKER_FILE="docker/musllinux.Dockerfile" >> $GITHUB_ENV
+          echo BUILD_PLATFORM="linux/arm/v7" >> $GITHUB_ENV
+          echo BIN_NAME="cpa_musllinux_armv7" >> $GITHUB_ENV
+          echo TEST_DISTRO_NAME="alpine:3.15" >> $GITHUB_ENV
+
+      - name: Load Production Image Cache
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.cache-production
+          key: ${{ matrix.build_arch }}-prod-${{ hashFiles(env.BASE_DOCKER_FILE, 'requirements.txt') }}
+
+      - name: Load Image
+        run: docker load < /tmp/.cache-production/prod-musllinux-${{ matrix.build_arch }}.tar.gz
+
+      - name: Run Image
+        run: |
+          docker run \
+              --platform ${{ env.BUILD_PLATFORM }} \
+              -v $(realpath .):/build \
+              --workdir /build \
+              prod-musllinux-${{ matrix.build_arch }}:latest \
+              python3 -m nuitka --plugin-enable=numpy --standalone --onefile ./cloud_py_api/main.py
+          mv main.bin ${{ env.BIN_NAME }}
+          gzip -9 -c ${{ env.BIN_NAME }} > ${{ env.BIN_NAME }}.gz
+
+      - name: Uploading binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: cpa_binaries
+          path: ./${{ env.BIN_NAME }}.gz
+          if-no-files-found: error
+
+      - name: Test binary
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          platforms: ${{ env.BUILD_PLATFORM }}
+          push: false
+          file: docker/test_release.Dockerfile
+          build-args: |
+            CPA_NAME=${{ env.BIN_NAME }}
+            DISTRO_NAME=${{ env.TEST_DISTRO_NAME }}
 
   publish_release:
-    needs: [ manylinux ]
+    needs: [ manylinux, musllinux ]
     name: Publish Release
     runs-on: ubuntu-latest
 

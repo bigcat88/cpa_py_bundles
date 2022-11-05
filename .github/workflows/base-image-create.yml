@@ -13,7 +13,7 @@ jobs:
     name: ManyLinux • ${{ matrix.build_arch }}
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         build_arch: [ "arm64", "amd64", "armv7" ]
 
@@ -72,7 +72,7 @@ jobs:
     name: MuslLinux • ${{ matrix.build_arch }}
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         build_arch: [ "arm64", "amd64", "armv7" ]
 
