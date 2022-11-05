@@ -1,10 +1,5 @@
 wheel
 orderedset
 nuitka
-numpy
-scipy
-pywavelets
-pillow
-pi_heif
 pg8000
 pymysql
