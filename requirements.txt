@@ -1,4 +1,9 @@
 wheel
 orderedset
 nuitka
+numpy
+scipy
+pywavelets
+pillow
+pg8000
 pymysql
