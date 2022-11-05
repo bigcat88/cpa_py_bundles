@@ -1,5 +1,4 @@
 wheel
 orderedset
 nuitka
-pg8000
 pymysql
