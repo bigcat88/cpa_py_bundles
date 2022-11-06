@@ -3,9 +3,8 @@ FROM almalinux:8.6
 RUN \
   dnf update -y && \
   dnf install -y \
-    python39-devel \
     git \
-    cmake \
+    make \
     autoconf \
     automake \
     gcc \
