@@ -12,7 +12,7 @@ RUN \
     gcc-c++ && \
   cat /etc/os-release && uname -a && \
   echo "**** Installing Patchelf ****" && \
-  git https://github.com/NixOS/patchelf.git && \
+  git clone https://github.com/NixOS/patchelf.git && \
   cd patchelf && \
   ./bootstrap.sh && ./configure && make && make check || true && \
   cat tests/replace-add-needed.sh.log && echo "***" && \
