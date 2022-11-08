@@ -8,14 +8,12 @@ RUN \
     autoconf \
     automake \
     gcc \
-    gcc-c++ && \
-  cat /etc/os-release && uname -a && \
+    gcc-c++ \
+    cmake \
+    python39-devel && \
   echo "**** Installing Patchelf ****" && \
-  git clone -b 0.15.0 https://github.com/NixOS/patchelf.git && \
+  git clone -b 0.16.1 https://github.com/NixOS/patchelf.git && \
   cd patchelf && \
-  ./bootstrap.sh && ./configure && make && make check || true && \
-  cat tests/replace-add-needed.sh.log && echo "***" && \
-  cat tests/set-interpreter-long.sh.log
-#    && make install && \
-#  cd .. && \
-#  python3 -m pip install --upgrade pip
+  ./bootstrap.sh && ./configure && make && make check && make install && \
+  cd .. && \
+  python3 -m pip install --upgrade pip
