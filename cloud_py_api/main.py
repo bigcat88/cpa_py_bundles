@@ -3,7 +3,7 @@ import signal
 import sys
 
 from cloud_py_api import log
-from cloud_py_api.media_dc import process_task
+from cloud_py_api.media_dc import get_tasks, process_task
 from cloud_py_api.misc import print_versions
 from cloud_py_api.nextcloud import CONFIG
 
@@ -11,7 +11,7 @@ from cloud_py_api.nextcloud import CONFIG
 def signal_handler(signum=None, _frame=None):
     """Handler for unexpected shutdowns."""
 
-    log.info("Got signal: {%d}", signum)
+    log.info("Got signal: %u", signum)
     sys.exit(0)
 
 
@@ -25,7 +25,7 @@ if __name__ == "__main__":
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
         "-t",
-        dest="mdc_task_id",
+        dest="mdc_tasks_id",
         type=int,
         action="append",
         help="Process MediaDC task with specified ID. Can be specified multiply times.",
@@ -34,10 +34,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.version:
         print_versions()
-    elif args.mdc_task_id:
-        for i in args.mdc_task_id:
-            process_task(i, True)
+    elif args.mdc_tasks_id:
+        tasks_to_process = get_tasks()
+        tasks_to_process = list(filter(lambda row: row["id"] in args.mdc_tasks_id, tasks_to_process))
+        missing_tasks = list(filter(lambda r: not any(row["id"] == r for row in tasks_to_process), args.mdc_tasks_id))
+        for x in missing_tasks:
+            log.warning("Cant find task with id=%u", x)
+        for i in tasks_to_process:
+            process_task(i)
     else:
         parser.print_help()
-    log.debug(CONFIG)
     sys.exit(0)

@@ -3,9 +3,9 @@ import re
 from typing import Any
 
 from cloud_py_api import log
-from cloud_py_api.nextcloud.occ import get_cloud_config_value, php_call
 
 from .db_connectors import connection_test
+from .occ import get_cloud_config_value, php_call
 
 MAP_SCHEME: dict[str, list] = {
     "dbname": ["dbname", None],

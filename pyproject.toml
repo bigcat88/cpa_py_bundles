@@ -25,8 +25,9 @@ master.unsafe-load-any-extension = "yes"
 design.max-attributes = 9
 design.max-locals = 16
 design.max-returns = 8
+design.max-args = 6
 basic.good-names = [
-    "a", "b", "c", "d", "e", "f", "i", "j", "k", "v",
+    "a", "b", "c", "d", "e", "f", "i", "j", "k", "v", "h", "s",
     "ex", "_", "fp", "im",
 ]
 reports.output-format = "colorized"
