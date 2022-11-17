@@ -7,3 +7,4 @@ pywavelets
 pillow
 pg8000
 pymysql
+hexhamming
