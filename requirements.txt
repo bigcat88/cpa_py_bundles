@@ -5,6 +5,7 @@ numpy
 scipy
 pywavelets
 pillow
+pi-heif
 pg8000
 pymysql
 hexhamming

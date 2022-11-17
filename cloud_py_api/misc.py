@@ -13,12 +13,12 @@ from cloud_py_api._version import __version__
 
 
 def print_versions():
-    log.info("Python: ", sys.version)
-    log.info("CloudPyApi:", __version__)
-    log.info("pg8000: ", pg8000.__version__)
-    log.info("pymysql: ", pymysql.__version__)
-    log.info("pillow: ", PIL.__version__)
-    log.info("pi_heif: ", pi_heif.__version__)
-    log.info("numpy: ", numpy.__version__)
-    log.info("scipy: ", scipy.__version__)
-    log.info("pywavelets: ", pywt.__version__)
+    log.info("Python: %s", sys.version)
+    log.info("CloudPyApi: %s", __version__)
+    log.info("pg8000: %s", pg8000.__version__)
+    log.info("pymysql: %s", pymysql.__version__)
+    log.info("pillow: %s", PIL.__version__)
+    log.info("pi_heif: %s", pi_heif.__version__)
+    log.info("numpy: %s", numpy.__version__)
+    log.info("scipy: %s", scipy.__version__)
+    log.info("pywavelets: %s", pywt.__version__)

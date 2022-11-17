@@ -6,7 +6,7 @@ from io import BytesIO
 from typing import Any
 
 import numpy
-from pi_heif import HeifImagePlugin  # noqa # pylint: disable=unused-import
+from pi_heif import register_heif_opener
 from PIL import Image, ImageOps
 
 from cloud_py_api import log
@@ -19,6 +19,8 @@ try:
     from hexhamming import check_hexstrings_within_dist
 except ImportError:
     check_hexstrings_within_dist = None
+
+register_heif_opener()
 
 ImagesGroups: dict[int, list[int]] = {}
 SetOfGroups: list[Any] = []  # [flat_numpy_array1,flat_numpy_array2,flat_numpy_array3]
