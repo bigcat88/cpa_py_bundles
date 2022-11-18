@@ -39,12 +39,12 @@ def get_storages_info(num_id: int = None) -> list:
             "mounts.mount_point, mounts.user_id, mounts.root_id "
             f"FROM {TABLES.storages} AS storage "
             f"LEFT JOIN {TABLES.mounts}  AS mounts "
-            "ON storage.numeric_id = mounts.storage_id "
+            "ON storage.numeric_id = mounts.storage_id"
         )
     if num_id is None:
-        query += "WHERE 1;"
+        query += " WHERE 1;" if CONFIG["dbtype"] == "mysql" else ";"
     else:
-        query += f"WHERE storage.numeric_id = {num_id};"
+        query += f" WHERE storage.numeric_id = {num_id};"
     return execute_fetchall(query)
 
 

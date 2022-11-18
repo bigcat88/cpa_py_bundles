@@ -29,8 +29,8 @@ from .db_requests import (
     set_task_keepalive,
     unlock_task,
 )
-from .dc_images import process_images, reset_images, save_image_results
-from .dc_videos import process_videos, reset_videos, save_video_results
+from .images import process_images, reset_images, save_image_results
+from .videos import process_videos, reset_videos, save_video_results
 
 TASK_KEEP_ALIVE = 1  # 8
 

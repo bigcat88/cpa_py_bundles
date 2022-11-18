@@ -15,11 +15,13 @@ from .db_tables import MDC_TABLES
 def get_tasks() -> list:
     """Return list of all tasks(each task is a dict)."""
 
+    _where = ""
+    if CONFIG["dbtype"] == "mysql":
+        _where = " WHERE 1"
     query = (
         "SELECT id, target_directory_ids, exclude_list, collector_settings, files_scanned, "
         "updated_time , finished_time, errors, py_pid "
-        f"FROM {MDC_TABLES.tasks} "
-        "WHERE 1;"
+        f"FROM {MDC_TABLES.tasks}{_where};"
     )
     tasks_list = execute_fetchall(query)
     if CONFIG["dbtype"] == "mysql":

@@ -15,8 +15,8 @@ from cloud_py_api.nextcloud import (
 )
 
 from .db_requests import store_err_video_hash, store_task_files_group, store_video_hash
-from .dc_images import arr_hash_from_bytes, arr_hash_to_string, calc_hash
 from .ffmpeg_probe import ffprobe_get_video_info, stub_call_ff
+from .images import arr_hash_from_bytes, arr_hash_to_string, calc_hash
 
 try:
     from hexhamming import check_hexstrings_within_dist
