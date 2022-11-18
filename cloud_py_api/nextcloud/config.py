@@ -26,24 +26,25 @@ for key, value in MAP_SCHEME.items():
         log.error("Cant find {%s} value in NC config.", value[0])
 
 # Here we need to postprocess `dbhost` value and fill `usock` or `dbport` from `dbhost`
-host_port_socket = CONFIG["dbhost"].split(":", maxsplit=1)
-if len(host_port_socket) > 1:
-    # when dbhost = host:port or host:socket
-    CONFIG["dbhost"] = host_port_socket[0]
-    if os.path.exists(host_port_socket[1]):
-        CONFIG["usock"] = host_port_socket[1]
-    elif host_port_socket[1].isdigit():
-        CONFIG["dbport"] = host_port_socket[1]
-    else:
-        log.warning("Unknown socket or port value. ({%s})", CONFIG["dbhost"])
-elif os.path.exists(CONFIG["dbhost"]):
-    # when dbhost = socket
-    CONFIG["usock"] = CONFIG["dbhost"]
-    # config['dbhost'] = ''  # removed to fix this: https://github.com/andrey18106/mediadc/issues/45
-if CONFIG["dbtype"] == "pgsql":
-    # Don't know currently how to handle this situation properly. Using default port value for socket name.
-    if CONFIG["usock"]:
-        CONFIG["usock"] = os.path.join(CONFIG["usock"], ".s.PGSQL.5432")
+if CONFIG["dbhost"]:
+    host_port_socket = CONFIG["dbhost"].split(":", maxsplit=1)
+    if len(host_port_socket) > 1:
+        # when dbhost = host:port or host:socket
+        CONFIG["dbhost"] = host_port_socket[0]
+        if os.path.exists(host_port_socket[1]):
+            CONFIG["usock"] = host_port_socket[1]
+        elif host_port_socket[1].isdigit():
+            CONFIG["dbport"] = host_port_socket[1]
+        else:
+            log.warning("Unknown socket or port value. ({%s})", CONFIG["dbhost"])
+    elif os.path.exists(CONFIG["dbhost"]):
+        # when dbhost = socket
+        CONFIG["usock"] = CONFIG["dbhost"]
+        # config['dbhost'] = ''  # removed to fix this: https://github.com/andrey18106/mediadc/issues/45
+    if CONFIG["dbtype"] == "pgsql":
+        # Don't know currently how to handle this situation properly. Using default port value for socket name.
+        if CONFIG.get("usock", None):
+            CONFIG["usock"] = os.path.join(CONFIG["usock"], ".s.PGSQL.5432")
 
 
 def finish_db_configuration() -> bool:
@@ -53,7 +54,7 @@ def finish_db_configuration() -> bool:
     if connection_test(CONFIG):
         return True
     # Trying without socket.
-    if CONFIG["usock"]:
+    if CONFIG.get("usock", None):
         usock = CONFIG["usock"]
         CONFIG["usock"] = ""
         if connection_test(CONFIG):
@@ -80,13 +81,14 @@ def finish_db_configuration() -> bool:
             log.warning("Cant get php info.")
     # If we got here then all is not so good, as it can be. Last try with default host and port.
     host = CONFIG["dbhost"]
-    port = CONFIG["dbport"]
+    port = CONFIG.get("dbport", None)
     CONFIG["dbhost"] = ""
     CONFIG["dbport"] = ""
     if connection_test(CONFIG):
         return True
     CONFIG["dbhost"] = host
-    CONFIG["dbport"] = port
+    if port:
+        CONFIG["dbport"] = port
     return False
 
 

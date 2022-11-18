@@ -18,9 +18,6 @@ def signal_handler(signum=None, _frame=None):
 if __name__ == "__main__":
     for sig in [signal.SIGINT, signal.SIGQUIT, signal.SIGTERM, signal.SIGHUP]:
         signal.signal(sig, signal_handler)
-    if not CONFIG["valid"]:
-        log.error("WAH WAH WAH.")
-        sys.exit(1)
     parser = argparse.ArgumentParser(description="Module for performing objects operations.", add_help=True)
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
@@ -35,6 +32,9 @@ if __name__ == "__main__":
     if args.version:
         print_versions()
     elif args.mdc_tasks_id:
+        if not CONFIG["valid"]:
+            log.error("Unable to parse config or connect to database. Does `occ` works?")
+            sys.exit(1)
         tasks_to_process = get_tasks()
         tasks_to_process = list(filter(lambda row: row["id"] in args.mdc_tasks_id, tasks_to_process))
         missing_tasks = list(filter(lambda r: not any(row["id"] == r for row in tasks_to_process), args.mdc_tasks_id))

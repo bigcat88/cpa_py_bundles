@@ -45,10 +45,10 @@ def php_call(*params, decode=True, log_error=True) -> Union[str, bytes, None]:
         result = subprocess.run([_PHP_PATH, *params], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, check=True)
     except Exception:  # noqa # pylint: disable=broad-except
         if log_error:
-            log.exception()
+            log.exception("php_call exception:")
         return None
     return result.stdout.decode("utf-8").rstrip("\n") if decode else result.stdout
 
 
-_OCC_PATH = os.path.join(os.environ.get("SERVER_ROOT", "/var/www/nextcloud"), "occ")
+_OCC_PATH = os.path.join(os.environ.get("SERVER_ROOT", "/var/www/nextclou2d"), "occ")
 _PHP_PATH = os.environ.get("PHP_PATH", "php")

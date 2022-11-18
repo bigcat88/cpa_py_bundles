@@ -53,7 +53,7 @@ def create_connection(config: dict, log_errors=True):
                 )
     except Exception:  # noqa # pylint: disable=broad-except
         if log_errors:
-            log.exception()
+            log.exception("create_connection exception:")
     return connection
 
 

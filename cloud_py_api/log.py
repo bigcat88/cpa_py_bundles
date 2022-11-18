@@ -5,8 +5,8 @@ logging.basicConfig(format="%(levelname)s:%(message)s", level=environ.get("LOGLE
 LOGGER = logging.getLogger()
 
 
-def exception(*args, **kwargs):
-    LOGGER.exception(*args, **kwargs)
+def exception(msg, *args, **kwargs):
+    LOGGER.exception(msg, *args, **kwargs)
 
 
 def critical(*args, **kwargs):
