@@ -168,7 +168,6 @@ def process_task(task_info) -> None:
             group_offset = process_image_task(task_settings)
             process_video_task(task_settings, group_offset)
         _task_status = "finished"
-        sleep(5)  # REMOVEEEE
         log.info("Task execution_time: %d seconds", perf_counter() - time_start)
         finalize_task(task_info["id"])
     except Exception as exception_info:  # noqa # pylint: disable=broad-except

@@ -1,8 +1,9 @@
 import logging
 from os import environ
 
-logging.basicConfig(format="%(levelname)s:%(message)s", level=environ.get("LOGLEVEL", "INFO").upper())
-LOGGER = logging.getLogger()
+logging.basicConfig(format="%(levelname)s:%(message)s")
+LOGGER = logging.getLogger("nc_py_api")
+LOGGER.setLevel(level=environ.get("LOGLEVEL", "INFO").upper())
 
 
 def exception(msg, *args, **kwargs):
