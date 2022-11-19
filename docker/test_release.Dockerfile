@@ -10,4 +10,4 @@ RUN \
   ls -la . && \
   chmod +x $CPA_NAME && \
   ls -la . && \
-  ./$CPA_NAME --version
+  ./$CPA_NAME --info
