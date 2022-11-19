@@ -50,5 +50,5 @@ def php_call(*params, decode=True, log_error=True) -> Union[str, bytes, None]:
     return result.stdout.decode("utf-8").rstrip("\n") if decode else result.stdout
 
 
-_OCC_PATH = os.path.join(os.environ.get("SERVER_ROOT", "/var/www/nextclou2d"), "occ")
+_OCC_PATH = os.path.join(os.environ.get("SERVER_ROOT", "/var/www/nextcloud"), "occ")
 _PHP_PATH = os.environ.get("PHP_PATH", "php")
