@@ -1,13 +1,15 @@
 FROM quay.io/pypa/manylinux2014_aarch64
 
 RUN \
-  yum install wget openssl11-devel -y && \
+  yum -y install epel-release && \
+  yum -y update && \
+  yum -y install wget openssl11-devel && \
   mkdir /usr/local/openssl11 && \
   cd /usr/local/openssl11 && \
   ln -s /usr/lib64/openssl11 lib && \
   ln -s /usr/include/openssl11 include && \
   cd / && \
-  yum install libffi-devel -y && \
+  yum -y install libffi-devel && \
   wget https://www.python.org/ftp/python/3.9.15/Python-3.9.15.tgz && \
   tar xvf Python-3.9.15.tgz && \
   cd Python-3.9.15 && \
