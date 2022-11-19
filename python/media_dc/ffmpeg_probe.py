@@ -6,7 +6,7 @@ import json
 import re
 import subprocess
 
-from cloud_py_api import log
+from python.nc_py_api import log
 
 FF_DEBUG = 0
 

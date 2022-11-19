@@ -7,13 +7,13 @@ from typing import Any
 
 import numpy
 
-from cloud_py_api import log
-from cloud_py_api.nextcloud import (
+from python.nc_py_api import (
     can_directly_access_file,
     get_file_full_path,
     request_file_from_php,
 )
 
+from . import log
 from .db_requests import store_err_video_hash, store_task_files_group, store_video_hash
 from .ffmpeg_probe import ffprobe_get_video_info, stub_call_ff
 from .images import arr_hash_from_bytes, arr_hash_to_string, calc_hash

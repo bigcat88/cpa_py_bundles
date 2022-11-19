@@ -3,8 +3,7 @@ Helper functions related to get files content or storages info.
 """
 from pathlib import Path
 
-from cloud_py_api import log
-
+from . import log
 from .db_requests import get_storages_info
 from .occ import occ_call
 

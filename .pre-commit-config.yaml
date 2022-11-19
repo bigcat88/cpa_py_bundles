@@ -28,5 +28,5 @@ repos:
     rev: v0.982
     hooks:
      -  id: mypy
-        files: cloud_py_api/
+        files: python/
         additional_dependencies: [numpy, pillow, pi_heif, pywavelets, pg8000, types-pymysql, pytest]

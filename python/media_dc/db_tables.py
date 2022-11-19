@@ -1,4 +1,4 @@
-from cloud_py_api.nextcloud import CONFIG
+from python.nc_py_api import CONFIG
 
 
 class Tables:

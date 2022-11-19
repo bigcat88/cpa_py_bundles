@@ -3,7 +3,7 @@
 # import os
 # import pytest
 #
-# import cloud_py_api.occ as occ
+# import python.occ as occ
 
 
 # @patch("occ.subprocess.run")

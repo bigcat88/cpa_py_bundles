@@ -2,8 +2,7 @@ import os
 import re
 from typing import Any
 
-from cloud_py_api import log
-
+from . import log
 from .db_connectors import connection_test
 from .occ import get_cloud_config_value, php_call
 

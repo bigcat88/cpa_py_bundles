@@ -6,14 +6,14 @@ from enum import Enum
 from pathlib import Path
 from time import perf_counter, sleep
 
-from cloud_py_api import log
-from cloud_py_api.nextcloud import (
+from python.nc_py_api import (
     CONFIG,
     close_connection,
     get_mimetype_id,
     get_mounts_to,
     get_paths_by_ids,
     get_time,
+    log,
     occ_call,
 )
 
@@ -32,7 +32,7 @@ from .db_requests import (
 from .images import process_images, reset_images, save_image_results
 from .videos import process_videos, reset_videos, save_video_results
 
-TASK_KEEP_ALIVE = 1  # 8
+TASK_KEEP_ALIVE = 8
 
 
 class TaskType(Enum):
@@ -101,7 +101,7 @@ def analyze_and_lock(task_info: dict) -> bool:
             log.info("Task is already running.")
             return False
     if task_info["errors"]:
-        log.debug("Task was previously finished with errors.")
+        log.info("Task was previously finished with errors.")
     else:
         if task_info["finished_time"] == 0 and task_info["files_scanned"] == 0:
             log.debug("Processing new task.")
@@ -217,6 +217,7 @@ def process_video_task_dirs(directories_ids: list, task_settings: dict):
 
 def process_directory_images(dir_id: int, task_settings: dict) -> list:
     """Process all files in `dir_id` with mimetype==mime_image and return list of sub dirs for this `dir_id`."""
+
     dir_info = get_paths_by_ids([dir_id])
     file_mounts = []
     if dir_info:
@@ -237,6 +238,7 @@ def process_directory_images(dir_id: int, task_settings: dict) -> list:
 
 def process_directory_videos(dir_id: int, task_settings: dict) -> list:
     """Process all files in `dir_id` with mimetype==mime_video and return list of sub dirs for this `dir_id`."""
+
     dir_info = get_paths_by_ids([dir_id])
     file_mounts = []
     if dir_info:

@@ -5,7 +5,7 @@ import re
 import subprocess
 from typing import Union
 
-from cloud_py_api import log
+from . import log
 
 
 def get_cloud_config_value(value_name: str, default=None) -> Union[str, None]:
