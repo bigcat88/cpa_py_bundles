@@ -1,4 +1,5 @@
-FROM quay.io/pypa/manylinux2014_aarch64
+ARG BUILD_IMG
+FROM $BUILD_IMG
 
 RUN \
   yum -y install libffi-devel wget && \
