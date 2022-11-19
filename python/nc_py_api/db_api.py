@@ -1,9 +1,9 @@
 from time import sleep
 from typing import Any
 
-from . import log
 from .config import CONFIG
 from .db_connectors import create_connection
+from .log import cpa_logger as log
 
 CONNECTIONS: list[Any] = [None, None]
 

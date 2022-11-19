@@ -2,8 +2,8 @@ import os
 import re
 from typing import Any
 
-from . import log
 from .db_connectors import connection_test
+from .log import cpa_logger as log
 from .occ import get_cloud_config_value, php_call
 
 MAP_SCHEME: dict[str, list] = {

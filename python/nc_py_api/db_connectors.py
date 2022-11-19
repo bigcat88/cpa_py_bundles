@@ -7,7 +7,7 @@ from os import environ
 from pg8000.dbapi import connect as pgsql_connect
 from pymysql import connect as mysql_connect
 
-from . import log
+from .log import cpa_logger as log
 
 
 def create_connection(config: dict, log_errors=True):

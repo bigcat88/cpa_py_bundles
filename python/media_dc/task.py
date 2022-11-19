@@ -13,7 +13,6 @@ from python.nc_py_api import (
     get_mounts_to,
     get_paths_by_ids,
     get_time,
-    log,
     occ_call,
 )
 
@@ -30,6 +29,7 @@ from .db_requests import (
     unlock_task,
 )
 from .images import process_images, reset_images, save_image_results
+from .log import logger as log
 from .videos import process_videos, reset_videos, save_video_results
 
 TASK_KEEP_ALIVE = 8

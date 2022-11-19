@@ -1,8 +1,9 @@
 import argparse
 import sys
 
-from python.bundle_info import bundle_info
-from python.media_dc import get_tasks, log, process_task
+from python.media_dc import get_tasks, process_task
+from python.media_dc.bundle_info import bundle_info
+from python.media_dc.log import logger as log
 from python.nc_py_api import CONFIG
 
 if __name__ == "__main__":

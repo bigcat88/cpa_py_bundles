@@ -11,5 +11,5 @@ from .files import (
     get_mounts_to,
     request_file_from_php,
 )
-from .log import LOGGER
+from .log import cpa_logger
 from .occ import get_cloud_app_config_value, occ_call

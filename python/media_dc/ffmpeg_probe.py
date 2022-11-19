@@ -6,7 +6,7 @@ import json
 import re
 import subprocess
 
-from python.nc_py_api import log
+from .log import logger as log
 
 FF_DEBUG = 0
 

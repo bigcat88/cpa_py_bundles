@@ -2,29 +2,5 @@ import logging
 from os import environ
 
 logging.basicConfig(format="%(levelname)s:%(name)s:%(module)s:%(funcName)s:%(message)s")
-LOGGER = logging.getLogger("nc_py_api")
-LOGGER.setLevel(level=environ.get("CPA_LOGLEVEL", "INFO").upper())
-
-
-def exception(msg, *args, **kwargs):
-    LOGGER.exception(msg, *args, **kwargs)
-
-
-def critical(*args, **kwargs):
-    LOGGER.critical(*args, **kwargs)
-
-
-def error(*args, **kwargs):
-    LOGGER.error(*args, **kwargs)
-
-
-def warning(*args, **kwargs):
-    LOGGER.warning(*args, **kwargs)
-
-
-def info(*args, **kwargs):
-    LOGGER.info(*args, **kwargs)
-
-
-def debug(*args, **kwargs):
-    LOGGER.debug(*args, **kwargs)
+cpa_logger = logging.getLogger("nc_py_api")
+cpa_logger.setLevel(level=environ.get("CPA_LOGLEVEL", "INFO").upper())

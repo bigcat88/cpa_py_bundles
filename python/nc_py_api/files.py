@@ -3,8 +3,8 @@ Helper functions related to get files content or storages info.
 """
 from pathlib import Path
 
-from . import log
 from .db_requests import get_storages_info
+from .log import cpa_logger as log
 from .occ import occ_call
 
 STORAGES_INFO = get_storages_info()

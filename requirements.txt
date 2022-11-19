@@ -1,11 +1,11 @@
 wheel
 ordered-set
 nuitka
+pg8000
+pymysql
 numpy
 scipy
 pywavelets
 pillow
 pi-heif
-pg8000
-pymysql
 hexhamming

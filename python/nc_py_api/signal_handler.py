@@ -1,7 +1,7 @@
 import signal
 import sys
 
-from . import log
+from .log import cpa_logger as log
 
 
 def signal_handler(signum=None, _frame=None):

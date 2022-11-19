@@ -9,7 +9,8 @@ import pywt
 import scipy
 
 from python import media_dc, nc_py_api
-from python.nc_py_api import log
+
+from .log import logger as log
 
 
 def bundle_info():
