@@ -14,4 +14,4 @@ RUN \
   ./configure --with-openssl=/usr/local/openssl11 --enable-optimizations && \
   make install && \
   python3 -m pip install --upgrade pip && \
-  python3 -m pip install --upgrade setuptools \
+  python3 -m pip install --upgrade setuptools
