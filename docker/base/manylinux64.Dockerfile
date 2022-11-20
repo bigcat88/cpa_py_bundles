@@ -18,11 +18,14 @@ RUN \
 
 RUN \
   python3 -m pip install --upgrade pip && \
-  python3 -m pip install --upgrade setuptools && \
-  python3 -m pip install --upgrade wheel ordered-set nuitka
+  python3 -m pip install --upgrade setuptools wheel ordered-set && \
+  python3 -m pip install --upgrade nuitka
 
 
-FROM base-manylinux:latest as prod
+# HERE ONE MORE STEP WITH FRAMEWORK REQUIREMENTS
+
+
+FROM base as prod
 
 ARG REQ_LIST
 RUN \
