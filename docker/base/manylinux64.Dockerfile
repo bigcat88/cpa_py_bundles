@@ -22,7 +22,7 @@ RUN \
   python3 -m pip install --upgrade wheel ordered-set nuitka
 
 
-FROM base-manylinux:latest
+FROM base-manylinux:latest as prod
 
 ARG REQ_LIST
 RUN \

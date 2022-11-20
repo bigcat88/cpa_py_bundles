@@ -1,10 +1,10 @@
-name: Build Requirements Image
+name: Build Production Image
 
 on:
   workflow_dispatch:
 
 concurrency:
-  group: build-requirements
+  group: build-prod
   cancel-in-progress: true
 
 jobs:
@@ -69,7 +69,8 @@ jobs:
 #          push: ${{ github.event_name != 'pull_request' }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
-          tags: manylinux:latest
+          tags: prod-manylinux:latest
+          target: prod
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
