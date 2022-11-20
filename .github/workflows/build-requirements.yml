@@ -61,7 +61,9 @@ jobs:
         with:
           context: .
           file: ${{ env.BASE_DOCKER_FILE }}
-          build-args: BUILD_IMG=${{ env.BUILD_IMG }} REQ_LIST="pg8000 pymysql numpy scipy pywavelets pillow pi-heif hexhamming"
+          build-args: |
+            BUILD_IMG=${{ env.BUILD_IMG }}
+            REQ_LIST="pg8000 pymysql numpy scipy pywavelets pillow pi-heif hexhamming"
           platforms: ${{ env.BUILD_PLATFORM }}
           push: false
 #          push: ${{ github.event_name != 'pull_request' }}
