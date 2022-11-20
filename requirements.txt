@@ -1,6 +1,3 @@
-wheel
-ordered-set
-nuitka
 pg8000
 pymysql
 numpy

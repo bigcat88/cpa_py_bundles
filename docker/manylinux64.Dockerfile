@@ -16,4 +16,5 @@ RUN \
   make install && \
   popd && \
   python3 -m pip install --upgrade pip && \
-  python3 -m pip install --upgrade setuptools
+  python3 -m pip install --upgrade setuptools && \
+  python3 -m pip install wheel ordered-set nuitka
