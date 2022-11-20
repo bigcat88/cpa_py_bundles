@@ -58,7 +58,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /tmp/.buildx-cache
-          key: 12345
+          key: 123455
 #          key: ${{ matrix.build_arch }}-${{ hashFiles( env.BASE_DOCKER_FILE ) }}
 
 #      - name: Login to Docker Hub

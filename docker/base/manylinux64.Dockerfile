@@ -27,6 +27,5 @@ RUN \
 
 FROM base as prod
 
-ARG REQ_LIST
 RUN \
-  python3 -m pip install $REQ_LIST
+  python3 -m pip install pg8000 pymysql numpy scipy pywavelets pillow pi-heif hexhamming
