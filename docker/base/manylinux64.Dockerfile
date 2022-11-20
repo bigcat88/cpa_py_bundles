@@ -3,7 +3,7 @@ FROM $BUILD_IMG as base
 
 RUN \
   yum -y install libffi-devel wget && \
-  wget https://www.openssl.org/source/openssl-1.1.1s.tar.gz && \
+  wget -q https://www.openssl.org/source/openssl-1.1.1s.tar.gz && \
   tar -xzf openssl-1.1.1s.tar.gz && \
   pushd openssl-1.1.1s && \
   ./config no-shared --prefix=/usr/local/ssl --openssldir=/usr/local/ssl && \
@@ -22,7 +22,7 @@ RUN \
   python3 -m pip install --upgrade wheel ordered-set nuitka
 
 
-FROM base
+FROM base-manylinux:latest
 
 ARG REQ_LIST
 RUN \
