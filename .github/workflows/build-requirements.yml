@@ -1,4 +1,4 @@
-name: Build Image with Requirements
+name: Build Requirements Image
 
 on:
   workflow_dispatch:
@@ -35,6 +35,7 @@ jobs:
         run: |
           echo BASE_DOCKER_FILE="docker/base/manylinux64.Dockerfile" >> $GITHUB_ENV
           echo BUILD_PLATFORM="linux/amd64" >> $GITHUB_ENV
+          echo BUILD_IMG="quay.io/pypa/manylinux2014_aarch64" >> $GITHUB_ENV
 
       - name: ARMv7 prepare
         if: matrix.build_arch == 'armv7'
@@ -60,7 +61,7 @@ jobs:
         with:
           context: .
           file: ${{ env.BASE_DOCKER_FILE }}
-          build-args: BUILD_IMG=${{ env.BUILD_IMG }}
+          build-args: BUILD_IMG=${{ env.BUILD_IMG }} REQ_LIST=${{ pg8000 pymysql numpy scipy pywavelets pillow pi-heif hexhamming }}
           platforms: ${{ env.BUILD_PLATFORM }}
           push: false
 #          push: ${{ github.event_name != 'pull_request' }}

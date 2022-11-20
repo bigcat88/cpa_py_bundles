@@ -1,4 +1,4 @@
-name: Build Base
+name: Build Base Image
 
 on:
   pull_request:
