@@ -67,7 +67,7 @@ jobs:
 #          push: ${{ github.event_name != 'pull_request' }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
-          tags: prod-manylinux:latest
+          tags: manylinux-${{ matrix.build_arch }}:latest
           target: prod
 
       - name: Image digest
