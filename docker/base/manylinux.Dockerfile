@@ -24,9 +24,11 @@ RUN \
     libharfbuzz-dev && \
   echo "**** Installing Patchelf ****" && \
   git clone -b 0.17.0 https://github.com/NixOS/patchelf.git && \
-  cd patchelf && \
+  pushd patchelf && \
   ./bootstrap.sh && ./configure && make && make check && make install && \
-  cd .. && \
+  popd
+
+RUN \
   python3 -m pip install --upgrade pip && \
   python3 -m pip install --upgrade setuptools && \
-  python3 -m pip install wheel ordered-set nuitka
+  python3 -m pip install --upgrade wheel ordered-set nuitka

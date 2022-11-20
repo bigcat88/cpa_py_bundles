@@ -1,5 +1,5 @@
 ARG BUILD_IMG
-FROM $BUILD_IMG
+FROM $BUILD_IMG as base
 
 RUN \
   yum -y install libffi-devel wget && \
@@ -14,7 +14,16 @@ RUN \
   pushd Python-3.9.15 && \
   ./configure --with-openssl=/usr/local/ssl --enable-optimizations && \
   make install && \
-  popd && \
+  popd
+
+RUN \
   python3 -m pip install --upgrade pip && \
   python3 -m pip install --upgrade setuptools && \
-  python3 -m pip install wheel ordered-set nuitka
+  python3 -m pip install --upgrade wheel ordered-set nuitka
+
+
+FROM base
+
+ARG REQ_LIST
+RUN \
+  python3 -m pip install $REQ_LIST

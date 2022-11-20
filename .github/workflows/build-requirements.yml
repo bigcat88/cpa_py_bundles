@@ -1,10 +1,10 @@
-name: Build Production Image
+name: Build Image with Requirements
 
 on:
   workflow_dispatch:
 
 concurrency:
-  group: build-production-image
+  group: build-requirements
   cancel-in-progress: true
 
 jobs:
@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build_arch: [ "arm64", "amd64" ]
+        build_arch: [ "amd64" ]
 
     steps:
       - uses: actions/checkout@v3
@@ -27,62 +27,52 @@ jobs:
       - name: ARM64 prepare
         if: matrix.build_arch == 'arm64'
         run: |
-          echo BASE_DOCKER_FILE="docker/manylinux64.Dockerfile" >> $GITHUB_ENV
+          echo BASE_DOCKER_FILE="docker/base/manylinux64.Dockerfile" >> $GITHUB_ENV
           echo BUILD_PLATFORM="linux/arm64" >> $GITHUB_ENV
 
       - name: AMD64 prepare
         if: matrix.build_arch == 'amd64'
         run: |
-          echo BASE_DOCKER_FILE="docker/manylinux64.Dockerfile" >> $GITHUB_ENV
+          echo BASE_DOCKER_FILE="docker/base/manylinux64.Dockerfile" >> $GITHUB_ENV
           echo BUILD_PLATFORM="linux/amd64" >> $GITHUB_ENV
 
       - name: ARMv7 prepare
         if: matrix.build_arch == 'armv7'
         run: |
-          echo BASE_DOCKER_FILE="docker/manylinux.Dockerfile" >> $GITHUB_ENV
+          echo BASE_DOCKER_FILE="docker/base/manylinux.Dockerfile" >> $GITHUB_ENV
           echo BUILD_PLATFORM="linux/arm/v7" >> $GITHUB_ENV
 
-      - name: Load Base Image Cache
+      - name: Cache Docker layers
         uses: actions/cache@v3
-        id: base-manylinux
         with:
-          path: /tmp/.cache-base
-          key: ${{ matrix.build_arch }}-base-${{ hashFiles( env.BASE_DOCKER_FILE ) }}
+          path: /tmp/.buildx-cache
+          key: ${{ matrix.build_arch }}-${{ hashFiles( env.BASE_DOCKER_FILE ) }}
 
-      - name: Cache Production Image
-        uses: actions/cache@v3
-        id: production-manylinux
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
         with:
-          path: /tmp/.cache-production
-          key: ${{ matrix.build_arch }}-prod-${{ hashFiles(env.BASE_DOCKER_FILE, 'requirements.txt') }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Load Base Image
-        if: steps.production-manylinux.outputs.cache-hit != 'true'
-        run: |
-          docker load --input /tmp/.cache-base/base-manylinux-${{ matrix.build_arch }}.tar
-          mkdir /tmp/.cache-production
-          docker ps
+      - name: Build Image with Requirements
+        id: docker_build
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ${{ env.BASE_DOCKER_FILE }}
+          build-args: BUILD_IMG=${{ env.BUILD_IMG }}
+          platforms: ${{ env.BUILD_PLATFORM }}
+          push: ${{ github.event_name != 'pull_request' }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          tags: manylinux-${{ matrix.build_arch }}:latest
 
-      - name: Build Production Image
-        if: steps.production-manylinux.outputs.cache-hit != 'true'
-        run: |
-          docker run \
-              --platform ${{ env.BUILD_PLATFORM }} \
-              --name prod-manylinux-${{ matrix.build_arch }} \
-              -v $(realpath .):/build \
-              --workdir /build \
-              base-manylinux-${{ matrix.build_arch }}:latest \
-              python3 -m pip install -r ./requirements.txt
-          docker commit \
-              prod-manylinux-${{ matrix.build_arch }} prod-manylinux-${{ matrix.build_arch }}:latest
-          docker image save \
-              prod-manylinux-${{ matrix.build_arch }}:latest | gzip > \
-              /tmp/.cache-production/prod-manylinux-${{ matrix.build_arch }}.tar.gz
+      - name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
 
       - name: Debug Step
         run: |
-          ls -la /tmp/.cache-base/
-          ls -la /tmp/.cache-production/
+          ls -la /tmp/.buildx-cache
 
 #  musllinux:
 #    name: MuslLinux • ${{ matrix.build_arch }}
