@@ -25,6 +25,6 @@ RUN \
     libharfbuzz-dev && \
   echo "**** Installing Patchelf ****" && \
   git clone -b 0.17.0 https://github.com/NixOS/patchelf.git && \
-  pushd patchelf && \
+  cd patchelf && \
   ./bootstrap.sh && ./configure && make && make check && make install && \
-  popd
+  cd ..
