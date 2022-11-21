@@ -29,24 +29,24 @@ jobs:
         run: |
           echo BUILD_PLATFORM="linux/arm64" >> $GITHUB_ENV
           echo BUILD_IMG="quay.io/pypa/manylinux2014_aarch64" >> $GITHUB_ENV
-          echo BASE_INIT_1="scripts/install_basic_centos.sh" >> $GITHUB_ENV
-          echo BASE_INIT_2="scripts/install_other_centos.sh" >> $GITHUB_ENV
+          echo BASE_INIT_1="install_basic_centos.sh" >> $GITHUB_ENV
+          echo BASE_INIT_2="install_other_centos.sh" >> $GITHUB_ENV
 
       - name: AMD64 prepare
         if: matrix.build_arch == 'amd64'
         run: |
           echo BUILD_PLATFORM="linux/amd64" >> $GITHUB_ENV
           echo BUILD_IMG="quay.io/pypa/manylinux2014_x86_64" >> $GITHUB_ENV
-          echo BASE_INIT_1="scripts/install_basic_centos.sh" >> $GITHUB_ENV
-          echo BASE_INIT_2="scripts/install_other_centos.sh" >> $GITHUB_ENV
+          echo BASE_INIT_1="install_basic_centos.sh" >> $GITHUB_ENV
+          echo BASE_INIT_2="install_other_centos.sh" >> $GITHUB_ENV
 
       - name: ARMv7 prepare
         if: matrix.build_arch == 'armv7'
         run: |
           echo BUILD_PLATFORM="linux/arm/v7" >> $GITHUB_ENV
           echo BUILD_IMG="debian:11" >> $GITHUB_ENV
-          echo BASE_INIT_1="scripts/install_basic_debian.sh" >> $GITHUB_ENV
-          echo BASE_INIT_2="scripts/install_other_debian.sh" >> $GITHUB_ENV
+          echo BASE_INIT_1="install_basic_debian.sh" >> $GITHUB_ENV
+          echo BASE_INIT_2="install_other_debian.sh" >> $GITHUB_ENV
 
       - name: Log in to the Container registry
         uses: docker/login-action@v2
