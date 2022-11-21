@@ -4,7 +4,9 @@ FROM $BUILD_IMG as base
 ARG BASE_INIT_1
 COPY ./$BASE_INIT_1 /install_python.sh
 RUN \
+  ls -la / && \
   chmod +x /install_python.sh && \
+  ls -la / && \
   /install_python.sh && \
   rm /install_python.sh
 
