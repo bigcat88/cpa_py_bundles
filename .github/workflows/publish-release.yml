@@ -51,7 +51,7 @@ jobs:
           context: .
           file: docker/bundle_release.Dockerfile
           build-args: |
-            BUILD_IMG="ghcr.io/bigcat88/cpa_py_bundles/manylinux_${{ matrix.build_arch }}:latest"
+            BUILD_IMG=ghcr.io/bigcat88/cpa_py_bundles/manylinux_${{ matrix.build_arch }}:latest
           platforms: ${{ env.BUILD_PLATFORM }}
           push: false
           cache-from: type=gha,scope=release-manylinux-${{ matrix.build_arch }}
