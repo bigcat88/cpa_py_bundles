@@ -28,13 +28,14 @@ RUN \
   python3 -m pip install --upgrade pg8000 pymysql
 
 
-FROM framework as release
+ARG FRM_IMG
+FROM $FRM_IMG as release
 
 COPY ./python/requirements.txt /
 
 RUN \
   python3 -m pip install -r requirements.txt && \
-  rm /requirements.txt
+  rm requirements.txt
 
 
 FROM release as binaries

@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build_arch: [ "arm64", "amd64" ]
+        build_arch: [ "amd64" ]
 
     steps:
       - uses: actions/checkout@v3
@@ -28,22 +28,27 @@ jobs:
         if: matrix.build_arch == 'arm64'
         run: |
           echo BUILD_PLATFORM="linux/arm64" >> $GITHUB_ENV
+          echo FRM_IMG="ghcr.io/bigcat88/cpa_py_bundles/manylinux_${{ matrix.build_arch }}:latest" >> $GITHUB_ENV
 
       - name: AMD64 prepare
         if: matrix.build_arch == 'amd64'
         run: |
           echo BUILD_PLATFORM="linux/amd64" >> $GITHUB_ENV
+          echo FRM_IMG="ghcr.io/bigcat88/cpa_py_bundles/manylinux_${{ matrix.build_arch }}:latest" >> $GITHUB_ENV
 
       - name: ARMv7 prepare
         if: matrix.build_arch == 'armv7'
         run: |
           echo BUILD_PLATFORM="linux/arm/v7" >> $GITHUB_ENV
+          echo FRM_IMG="ghcr.io/bigcat88/cpa_py_bundles/manylinux_${{ matrix.build_arch }}:latest" >> $GITHUB_ENV
 
       - name: Build Release Image
         uses: docker/build-push-action@v3
         with:
           context: .
           file: docker/release.Dockerfile
+          build-args: |
+            FRM_IMG=${{ env.FRM_IMG }}
           platforms: ${{ env.BUILD_PLATFORM }}
           push: false
           cache-from: type=gha,mode=max,scope=release-manylinux-${{ matrix.build_arch }}
