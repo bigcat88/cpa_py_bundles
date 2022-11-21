@@ -4,12 +4,14 @@ FROM $BUILD_IMG as base
 ARG BASE_INIT_1
 COPY ./$BASE_INIT_1 /install_python.sh
 RUN \
+  chmod +x /install_python.sh && \
   /install_python.sh && \
   rm /install_python.sh
 
 ARG BASE_INIT_2
 COPY ./$BASE_INIT_2 /install_other.sh
 RUN \
+  chmod +x /install_other.sh && \
   /install_other.sh && \
   rm /install_other.sh
 
