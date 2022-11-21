@@ -54,11 +54,11 @@ jobs:
           echo BASE_DOCKER_FILE="docker/base/manylinux.Dockerfile" >> $GITHUB_ENV
           echo BUILD_PLATFORM="linux/arm/v7" >> $GITHUB_ENV
 
-      - name: Cache Docker layers
-        uses: actions/cache@v3
-        with:
-          path: /tmp/.buildx-cache
-          key: 123455
+#      - name: Cache Docker layers
+#        uses: actions/cache@v3
+#        with:
+#          path: /tmp/.buildx-cache
+#          key: 123455
 #          key: ${{ matrix.build_arch }}-${{ hashFiles( env.BASE_DOCKER_FILE ) }}
 
 #      - name: Login to Docker Hub
@@ -84,10 +84,6 @@ jobs:
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
-
-      - name: Debug Step
-        run: |
-          ls -la /tmp/.buildx-cache
 
 #  musllinux:
 #    name: MuslLinux • ${{ matrix.build_arch }}
