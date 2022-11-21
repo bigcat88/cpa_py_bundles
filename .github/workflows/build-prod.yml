@@ -35,7 +35,7 @@ jobs:
         run: |
           echo BASE_DOCKER_FILE="docker/base/manylinux64.Dockerfile" >> $GITHUB_ENV
           echo BUILD_PLATFORM="linux/amd64" >> $GITHUB_ENV
-          echo BUILD_IMG="quay.io/pypa/manylinux2014_aarch64" >> $GITHUB_ENV
+          echo BUILD_IMG="quay.io/pypa/manylinux2014_amd64" >> $GITHUB_ENV
 
       - name: ARMv7 prepare
         if: matrix.build_arch == 'armv7'
@@ -65,7 +65,7 @@ jobs:
           platforms: ${{ env.BUILD_PLATFORM }}
           push: false
 #          push: ${{ github.event_name != 'pull_request' }}
-          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-from: type=gha,mode=max,scope=build-${{ matrix.target }}
           cache-to: type=local,dest=/tmp/.buildx-cache
           tags: manylinux-${{ matrix.build_arch }}:latest
           target: base
