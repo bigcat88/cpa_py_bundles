@@ -51,12 +51,6 @@ jobs:
           echo BIN_NAME="cpa_manylinux_armv7" >> $GITHUB_ENV
           echo TEST_DISTRO_NAME="debian:11" >> $GITHUB_ENV
 
-      - name: Load Production Image Cache
-        uses: actions/cache@v3
-        with:
-          path: /tmp/.cache-production
-          key: ${{ matrix.build_arch }}-prod-${{ hashFiles(env.BASE_DOCKER_FILE, 'requirements.txt') }}
-
       - name: Build Release Binaries
         uses: docker/build-push-action@v3
         with:
