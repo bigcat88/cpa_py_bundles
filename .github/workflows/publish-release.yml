@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build_arch: [ "arm64", "amd64" ]
+        build_arch: [ "amd64" ]
 
     steps:
       - uses: actions/checkout@v3
@@ -27,24 +27,27 @@ jobs:
       - name: ARM64 prepare
         if: matrix.build_arch == 'arm64'
         run: |
-          echo BASE_DOCKER_FILE="docker/manylinux64.Dockerfile" >> $GITHUB_ENV
+          echo BASE_DOCKER_FILE="docker/build/manylinux64.Dockerfile" >> $GITHUB_ENV
           echo BUILD_PLATFORM="linux/arm64" >> $GITHUB_ENV
+          echo BUILD_IMG="quay.io/pypa/manylinux2014_aarch64" >> $GITHUB_ENV
           echo BIN_NAME="cpa_manylinux_arm64" >> $GITHUB_ENV
           echo TEST_DISTRO_NAME="debian:10" >> $GITHUB_ENV
 
       - name: AMD64 prepare
         if: matrix.build_arch == 'amd64'
         run: |
-          echo BASE_DOCKER_FILE="docker/manylinux64.Dockerfile" >> $GITHUB_ENV
+          echo BASE_DOCKER_FILE="docker/build/manylinux64.Dockerfile" >> $GITHUB_ENV
           echo BUILD_PLATFORM="linux/amd64" >> $GITHUB_ENV
+          echo BUILD_IMG="quay.io/pypa/manylinux2014_x86_64" >> $GITHUB_ENV
           echo BIN_NAME="cpa_manylinux_amd64" >> $GITHUB_ENV
           echo TEST_DISTRO_NAME="debian:10" >> $GITHUB_ENV
 
       - name: ARM7 prepare
         if: matrix.build_arch == 'armv7'
         run: |
-          echo BASE_DOCKER_FILE="docker/manylinux.Dockerfile" >> $GITHUB_ENV
+          echo BASE_DOCKER_FILE="docker/build/manylinux.Dockerfile" >> $GITHUB_ENV
           echo BUILD_PLATFORM="linux/arm/v7" >> $GITHUB_ENV
+          echo BUILD_IMG="debian:11" >> $GITHUB_ENV
           echo BIN_NAME="cpa_manylinux_armv7" >> $GITHUB_ENV
           echo TEST_DISTRO_NAME="debian:11" >> $GITHUB_ENV
 
@@ -54,18 +57,24 @@ jobs:
           path: /tmp/.cache-production
           key: ${{ matrix.build_arch }}-prod-${{ hashFiles(env.BASE_DOCKER_FILE, 'requirements.txt') }}
 
-      - name: Load Image
-        run: docker load < /tmp/.cache-production/prod-manylinux-${{ matrix.build_arch }}.tar.gz
+      - name: Build Release Binaries
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ${{ env.BASE_DOCKER_FILE }}
+          build-args: BUILD_IMG=${{ env.BUILD_IMG }}
+          platforms: ${{ env.BUILD_PLATFORM }}
+          push: false
+          cache-from: type=gha,mode=max,scope=build-manylinux-${{ matrix.build_arch }}
+          outputs: type=docker,dest=/tmp/binaries-manylinux-${{ matrix.build_arch }}.tar
+          tags: binaries-manylinux-${{ matrix.build_arch }}:latest
+          target: binaries
 
-      - name: Run Image
+      - name: Get Release Binaries
         run: |
-          docker run \
-              --platform ${{ env.BUILD_PLATFORM }} \
-              -v $(realpath .):/build \
-              --workdir /build \
-              prod-manylinux-${{ matrix.build_arch }}:latest \
-              python3 -m nuitka --plugin-enable=numpy --standalone --onefile ./python/main.py
-          mv main.bin ${{ env.BIN_NAME }}
+          docker load < /tmp/binaries-manylinux-${{ matrix.build_arch }}.tar
+          id=$(docker create binaries-manylinux-${{ matrix.build_arch }}:latest)
+          docker cp $id:/build/main.bin ${{ env.BIN_NAME }}
           gzip -9 -c ${{ env.BIN_NAME }} > ${{ env.BIN_NAME }}.gz
 
       - name: Uploading binary

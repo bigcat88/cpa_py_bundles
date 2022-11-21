@@ -22,10 +22,24 @@ RUN \
   python3 -m pip install --upgrade nuitka
 
 
-# HERE ONE MORE STEP WITH FRAMEWORK REQUIREMENTS
-
-
 FROM base as prod
 
 RUN \
-  python3 -m pip install pg8000 pymysql numpy scipy pywavelets pillow pi-heif hexhamming
+  python3 -m pip install --upgrade pg8000 pymysql
+  # Here will be simple: ``python3 -m pip install --upgrade nc_py_api`` in future
+
+
+FROM prod as release
+
+RUN \
+  python3 -m pip numpy pillow scipy pywavelets pi-heif hexhamming
+  # Here we should pick `requirements.txt` from repo and install from it, each project can have different requirements
+
+
+FROM release as binaries
+
+COPY . /build
+
+RUN \
+  cd build && \
+  python3 -m nuitka --plugin-enable=numpy --standalone --onefile ./python/main.py
