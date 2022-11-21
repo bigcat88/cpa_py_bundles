@@ -63,7 +63,10 @@ jobs:
         with:
           context: .
           file: docker/bundle_release.Dockerfile
-          build-args: BUILD_IMG=${{ env.BUILD_IMG }}
+          build-args: |
+            BUILD_IMG=${{ env.BUILD_IMG }}
+            BASE_INIT_1=${{ env.BASE_INIT_1 }}
+            BASE_INIT_2=${{ env.BASE_INIT_2 }}
           platforms: ${{ env.BUILD_PLATFORM }}
           push: false
           cache-from: type=gha,mode=max,scope=build-manylinux-${{ matrix.build_arch }}
@@ -116,7 +119,10 @@ jobs:
         with:
           context: .
           file: docker/bundle_release.Dockerfile
-          build-args: BUILD_IMG=${{ env.BUILD_IMG }}
+          build-args: |
+            BUILD_IMG=${{ env.BUILD_IMG }}
+            BASE_INIT_1=${{ env.BASE_INIT_1 }}
+            BASE_INIT_2=${{ env.BASE_INIT_2 }}
           platforms: ${{ env.BUILD_PLATFORM }}
           push: false
           cache-from: type=gha,mode=max,scope=build-musllinux-${{ matrix.build_arch }}
