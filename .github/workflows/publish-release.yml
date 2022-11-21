@@ -63,7 +63,7 @@ jobs:
         run: |
           docker load < /tmp/binaries-manylinux-${{ matrix.build_arch }}.tar
           id=$(docker create binaries-manylinux-${{ matrix.build_arch }}:latest)
-          docker cp $id:/build/main.bin ${{ env.BIN_NAME }}
+          docker cp $id:/main.bin ${{ env.BIN_NAME }}
           gzip -9 -c ${{ env.BIN_NAME }} > ${{ env.BIN_NAME }}.gz
 
       - name: Uploading binary
