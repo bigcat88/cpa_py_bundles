@@ -11,7 +11,9 @@ RUN \
 ARG BASE_INIT_2
 COPY ./$BASE_INIT_2 /install_other.sh
 RUN \
+  ls -la / && \
   chmod +x /install_other.sh && \
+  ls -la / && \
   /install_other.sh && \
   rm /install_other.sh
 
