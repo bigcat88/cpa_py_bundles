@@ -5,7 +5,7 @@ ARG BASE_INIT_1
 COPY ./$BASE_INIT_1 /install_basic.sh
 RUN \
   chmod +x /install_basic.sh && \
-  /install_python.sh && \
+  /install_basic.sh && \
   rm /install_basic.sh
 
 ARG BASE_INIT_2
