@@ -2,16 +2,16 @@ ARG BUILD_IMG
 FROM $BUILD_IMG as base
 
 ARG BASE_INIT_1
-COPY ./$BASE_INIT_1 /
+COPY ./$BASE_INIT_1 /install_python.sh
 RUN \
-  /$BASE_INIT_1 && \
-  rm /$BASE_INIT_1
+  /install_python.sh && \
+  rm /install_python.sh
 
 ARG BASE_INIT_2
-COPY ./$BASE_INIT_2 /
+COPY ./$BASE_INIT_2 /install_other.sh
 RUN \
-  /$BASE_INIT_2 && \
-  rm /$BASE_INIT_2
+  /install_other.sh && \
+  rm /install_other.sh
 
 RUN \
   python3 -m pip install --upgrade pip && \
