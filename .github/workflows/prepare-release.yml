@@ -1,10 +1,10 @@
-name: Build Release Image
+name: Prepare Release
 
 on:
   workflow_dispatch:
 
 concurrency:
-  group: build-release
+  group: prepare-release
   cancel-in-progress: true
 
 jobs:
@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build_arch: [ "amd64" ]
+        build_arch: [ "arm64", "amd64" ]
 
     steps:
       - uses: actions/checkout@v3
@@ -27,34 +27,27 @@ jobs:
       - name: ARM64 prepare
         if: matrix.build_arch == 'arm64'
         run: |
-          echo BASE_DOCKER_FILE="docker/build/manylinux64.Dockerfile" >> $GITHUB_ENV
           echo BUILD_PLATFORM="linux/arm64" >> $GITHUB_ENV
-          echo BUILD_IMG="quay.io/pypa/manylinux2014_aarch64" >> $GITHUB_ENV
 
       - name: AMD64 prepare
         if: matrix.build_arch == 'amd64'
         run: |
-          echo BASE_DOCKER_FILE="docker/build/manylinux64.Dockerfile" >> $GITHUB_ENV
           echo BUILD_PLATFORM="linux/amd64" >> $GITHUB_ENV
-          echo BUILD_IMG="quay.io/pypa/manylinux2014_x86_64" >> $GITHUB_ENV
 
       - name: ARMv7 prepare
         if: matrix.build_arch == 'armv7'
         run: |
-          echo BASE_DOCKER_FILE="docker/build/manylinux.Dockerfile" >> $GITHUB_ENV
           echo BUILD_PLATFORM="linux/arm/v7" >> $GITHUB_ENV
-          echo BUILD_IMG="debian:11" >> $GITHUB_ENV
 
       - name: Build Release Image
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ${{ env.BASE_DOCKER_FILE }}
-          build-args: BUILD_IMG=${{ env.BUILD_IMG }}
+          file: docker/release.Dockerfile
           platforms: ${{ env.BUILD_PLATFORM }}
           push: false
-          cache-from: type=gha,mode=max,scope=build-manylinux-${{ matrix.build_arch }}
-          cache-to: type=gha,mode=max,scope=build-manylinux-${{ matrix.build_arch }}
+          cache-from: type=gha,mode=max,scope=release-manylinux-${{ matrix.build_arch }}
+          cache-to: type=gha,mode=max,scope=release-manylinux-${{ matrix.build_arch }}
           tags: release-manylinux-${{ matrix.build_arch }}:latest
           target: release
 

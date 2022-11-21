@@ -1,15 +1,15 @@
 name: Build Base Image
 
 on:
-#  pull_request:
-#    branches: [master]
-#    types: [opened, reopened, edited]
-#    paths:
-#      - 'docker/build/many*.Dockerfile'
-#  push:
-#    branches: [master]
-#    paths:
-#      - 'docker/build/many*.Dockerfile'
+  pull_request:
+    branches: [master]
+    types: [opened, reopened, edited]
+    paths:
+      - 'docker/base/*.Dockerfile'
+  push:
+    branches: [master]
+    paths:
+      - 'docker/base/*.Dockerfile'
   workflow_dispatch:
 
 concurrency:
@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build_arch: [ "arm64", "amd64" ]
+        build_arch: [ "armv7", "arm64", "amd64" ]
 
     steps:
       - uses: actions/checkout@v3
@@ -37,21 +37,21 @@ jobs:
       - name: ARM64 prepare
         if: matrix.build_arch == 'arm64'
         run: |
-          echo BASE_DOCKER_FILE="docker/build/manylinux64.Dockerfile" >> $GITHUB_ENV
+          echo BASE_DOCKER_FILE="docker/base/manylinux64.Dockerfile" >> $GITHUB_ENV
           echo BUILD_PLATFORM="linux/arm64" >> $GITHUB_ENV
           echo BUILD_IMG="quay.io/pypa/manylinux2014_aarch64" >> $GITHUB_ENV
 
       - name: AMD64 prepare
         if: matrix.build_arch == 'amd64'
         run: |
-          echo BASE_DOCKER_FILE="docker/build/manylinux64.Dockerfile" >> $GITHUB_ENV
+          echo BASE_DOCKER_FILE="docker/base/manylinux64.Dockerfile" >> $GITHUB_ENV
           echo BUILD_PLATFORM="linux/amd64" >> $GITHUB_ENV
           echo BUILD_IMG="quay.io/pypa/manylinux2014_x86_64" >> $GITHUB_ENV
 
       - name: ARMv7 prepare
         if: matrix.build_arch == 'armv7'
         run: |
-          echo BASE_DOCKER_FILE="docker/build/manylinux.Dockerfile" >> $GITHUB_ENV
+          echo BASE_DOCKER_FILE="docker/base/manylinux.Dockerfile" >> $GITHUB_ENV
           echo BUILD_PLATFORM="linux/arm/v7" >> $GITHUB_ENV
           echo BUILD_IMG="debian:11" >> $GITHUB_ENV
 
@@ -68,61 +68,52 @@ jobs:
           tags: base-manylinux-${{ matrix.build_arch }}:latest
           target: base
 
-#  musllinux:
-#    name: MuslLinux • ${{ matrix.build_arch }}
-#    runs-on: ubuntu-latest
-#    strategy:
-#      fail-fast: false
-#      matrix:
-#        build_arch: [ "arm64", "amd64" ]
-#
-#    steps:
-#      - uses: actions/checkout@v3
-#      - name: Set up QEMU
-#        uses: docker/setup-qemu-action@v2
-#
-#      - name: Setup Docker Buildx
-#        uses: docker/setup-buildx-action@v2
-#
-#      - name: ARM64 prepare
-#        if: matrix.build_arch == 'arm64'
-#        run: |
-#          echo BASE_DOCKER_FILE="docker/musllinux.Dockerfile" >> $GITHUB_ENV
-#          echo BUILD_PLATFORM="linux/arm64" >> $GITHUB_ENV
-#
-#      - name: AMD64 prepare
-#        if: matrix.build_arch == 'amd64'
-#        run: |
-#          echo BASE_DOCKER_FILE="docker/musllinux.Dockerfile" >> $GITHUB_ENV
-#          echo BUILD_PLATFORM="linux/amd64" >> $GITHUB_ENV
-#
-#      - name: ARMv7 prepare
-#        if: matrix.build_arch == 'armv7'
-#        run: |
-#          echo BASE_DOCKER_FILE="docker/musllinux.Dockerfile" >> $GITHUB_ENV
-#          echo BUILD_PLATFORM="linux/arm/v7" >> $GITHUB_ENV
-#
-#      - name: Cache Base Image
-#        uses: actions/cache@v3
-#        id: base-musllinux
-#        with:
-#          path: /tmp/.cache-base
-#          key: ${{ matrix.build_arch }}-base-${{ hashFiles( env.BASE_DOCKER_FILE ) }}
-#
-#      - name: Create Cache Dir
-#        if: steps.base-musllinux.outputs.cache-hit != 'true'
-#        run: mkdir /tmp/.cache-base
-#
-#      - name: Build Base Image
-#        if: steps.base-musllinux.outputs.cache-hit != 'true'
-#        uses: docker/build-push-action@v3
-#        with:
-#          context: .
-#          platforms: ${{ env.BUILD_PLATFORM }}
-#          push: false
-#          tags: base-musllinux-${{ matrix.build_arch }}:latest
-#          file: ${{ env.BASE_DOCKER_FILE }}
-#          outputs: type=docker,dest=/tmp/.cache-base/base-musllinux-${{ matrix.build_arch }}.tar
-#
-#      - name: Debug Step
-#        run: ls -la /tmp/.cache-base/
+  musllinux:
+    name: MuslLinux • ${{ matrix.build_arch }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        build_arch: [ "armv7", "arm64", "amd64" ]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: ARM64 prepare
+        if: matrix.build_arch == 'arm64'
+        run: |
+          echo BASE_DOCKER_FILE="docker/base/musllinux.Dockerfile" >> $GITHUB_ENV
+          echo BUILD_PLATFORM="linux/arm64" >> $GITHUB_ENV
+          echo BUILD_IMG="alpine:3.15" >> $GITHUB_ENV
+
+      - name: AMD64 prepare
+        if: matrix.build_arch == 'amd64'
+        run: |
+          echo BASE_DOCKER_FILE="docker/base/musllinux.Dockerfile" >> $GITHUB_ENV
+          echo BUILD_PLATFORM="linux/amd64" >> $GITHUB_ENV
+          echo BUILD_IMG="alpine:3.15" >> $GITHUB_ENV
+
+      - name: ARMv7 prepare
+        if: matrix.build_arch == 'armv7'
+        run: |
+          echo BASE_DOCKER_FILE="docker/base/musllinux.Dockerfile" >> $GITHUB_ENV
+          echo BUILD_PLATFORM="linux/arm/v7" >> $GITHUB_ENV
+          echo BUILD_IMG="alpine:3.15" >> $GITHUB_ENV
+
+      - name: Build Base Image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ${{ env.BASE_DOCKER_FILE }}
+          build-args: BUILD_IMG=${{ env.BUILD_IMG }}
+          platforms: ${{ env.BUILD_PLATFORM }}
+          push: false
+          cache-from: type=gha,mode=max,scope=build-musllinux-${{ matrix.build_arch }}
+          cache-to: type=gha,mode=max,scope=build-musllinux-${{ matrix.build_arch }}
+          tags: base-musllinux-${{ matrix.build_arch }}:latest
+          target: base
