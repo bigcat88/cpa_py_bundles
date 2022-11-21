@@ -58,7 +58,7 @@ jobs:
       - name: Build Production Image
         uses: docker/build-push-action@v3
         with:
-          context: .
+          context: ./scripts
           file: docker/build_framework.Dockerfile
           build-args: |
             BUILD_IMG=${{ env.BUILD_IMG }}
@@ -121,7 +121,7 @@ jobs:
       - name: Build Production Image
         uses: docker/build-push-action@v3
         with:
-          context: .
+          context: ./scripts
           file: docker/build_framework.Dockerfile
           build-args: |
             BUILD_IMG=${{ env.BUILD_IMG }}
