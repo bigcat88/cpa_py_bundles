@@ -49,12 +49,12 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ${{ env.BASE_DOCKER_FILE }}
+          file: docker/bundle_release.Dockerfile
           build-args: |
             BUILD_IMG="ghcr.io/bigcat88/cpa_py_bundles/manylinux_${{ matrix.build_arch }}:latest"
           platforms: ${{ env.BUILD_PLATFORM }}
           push: false
-          cache-from: type=gha,mode=max,scope=build-manylinux-${{ matrix.build_arch }}
+          cache-from: type=gha,scope=release-manylinux-${{ matrix.build_arch }}
           outputs: type=docker,dest=/tmp/binaries-manylinux-${{ matrix.build_arch }}.tar
           tags: binaries-manylinux-${{ matrix.build_arch }}:latest
           target: binaries
