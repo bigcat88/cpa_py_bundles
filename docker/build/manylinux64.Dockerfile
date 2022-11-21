@@ -22,7 +22,7 @@ RUN \
   python3 -m pip install --upgrade nuitka
 
 
-FROM base as prod
+FROM base as framework
 
 RUN \
   python3 -m pip install --upgrade pg8000 pymysql

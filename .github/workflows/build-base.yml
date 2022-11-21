@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build_arch: [ "amd64" ]
+        build_arch: [ "arm64", "amd64" ]
 
     steps:
       - uses: actions/checkout@v3
