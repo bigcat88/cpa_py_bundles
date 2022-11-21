@@ -5,3 +5,4 @@ scipy
 pywavelets
 pillow
 pi-heif
+hexhamming

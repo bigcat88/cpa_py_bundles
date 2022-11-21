@@ -26,7 +26,7 @@ FROM base as prod
 
 RUN \
   python3 -m pip install --upgrade pg8000 pymysql
-  # Here will be simple: ``python3 -m pip install --upgrade nc_py_api`` in future
+  # Here will be simple: ``python3 -m pip install nc_py_api==0.1.0`` in future
 
 
 FROM prod as release
