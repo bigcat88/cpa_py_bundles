@@ -2,20 +2,16 @@ ARG BUILD_IMG
 FROM $BUILD_IMG as base
 
 ARG BASE_INIT_1
-COPY ./$BASE_INIT_1 /install_python.sh
+COPY ./$BASE_INIT_1 /install_basic.sh
 RUN \
-  ls -la / && \
-  chmod +x /install_python.sh && \
-  ls -la / && \
+  chmod +x /install_basic.sh && \
   /install_python.sh && \
-  rm /install_python.sh
+  rm /install_basic.sh
 
 ARG BASE_INIT_2
 COPY ./$BASE_INIT_2 /install_other.sh
 RUN \
-  ls -la / && \
   chmod +x /install_other.sh && \
-  ls -la / && \
   /install_other.sh && \
   rm /install_other.sh
 

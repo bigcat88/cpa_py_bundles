@@ -27,8 +27,3 @@ RUN \
   pushd patchelf && \
   ./bootstrap.sh && ./configure && make && make check && make install && \
   popd
-
-RUN \
-  python3 -m pip install --upgrade pip && \
-  python3 -m pip install --upgrade setuptools && \
-  python3 -m pip install --upgrade wheel ordered-set nuitka
