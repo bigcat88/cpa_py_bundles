@@ -45,6 +45,13 @@ jobs:
           echo BUILD_PLATFORM="linux/arm/v7" >> $GITHUB_ENV
           echo BUILD_IMG="debian:11" >> $GITHUB_ENV
 
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Build Production Image
         uses: docker/build-push-action@v3
         with:
@@ -52,11 +59,12 @@ jobs:
           file: ${{ env.BASE_DOCKER_FILE }}
           build-args: BUILD_IMG=${{ env.BUILD_IMG }}
           platforms: ${{ env.BUILD_PLATFORM }}
-          push: false
+          push: true
           cache-from: type=gha,mode=max,scope=build-manylinux-${{ matrix.build_arch }}
-          cache-to: type=gha,mode=max,scope=build-manylinux-${{ matrix.build_arch }}
+#          cache-to: type=gha,mode=max,scope=build-manylinux-${{ matrix.build_arch }}
           tags: prod-manylinux-${{ matrix.build_arch }}:latest
           target: prod
+
 
 #  musllinux:
 #    name: MuslLinux • ${{ matrix.build_arch }}
