@@ -54,6 +54,8 @@ jobs:
         with:
           context: .
           file: docker/bundle_release.Dockerfile
+          build-args: |
+            BUILD_IMG=${{ env.BUILD_IMG }}
           platforms: ${{ env.BUILD_PLATFORM }}
           push: true
           cache-from: type=gha,mode=max,scope=build-manylinux-${{ matrix.build_arch }}
@@ -107,6 +109,8 @@ jobs:
         with:
           context: .
           file: docker/bundle_release.Dockerfile
+          build-args: |
+            BUILD_IMG=${{ env.BUILD_IMG }}
           platforms: ${{ env.BUILD_PLATFORM }}
           push: true
           cache-from: type=gha,mode=max,scope=build-musllinux_$-${{ matrix.build_arch }}
