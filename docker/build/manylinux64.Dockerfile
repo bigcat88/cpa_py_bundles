@@ -32,7 +32,7 @@ RUN \
 FROM prod as release
 
 RUN \
-  python3 -m pip numpy pillow scipy pywavelets pi-heif hexhamming
+  python3 -m pip install --upgrade numpy pillow scipy pywavelets pi-heif hexhamming
   # Here we should pick `requirements.txt` from repo and install from it, each project can have different requirements
 
 
