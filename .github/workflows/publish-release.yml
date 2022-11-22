@@ -54,7 +54,7 @@ jobs:
             BUILD_IMG=ghcr.io/bigcat88/cpa_py_bundles/manylinux_${{ matrix.build_arch }}:latest
           platforms: ${{ env.BUILD_PLATFORM }}
           push: false
-          cache-from: type=gha,scope=reelease-manylinux-${{ matrix.build_arch }}
+          cache-from: type=gha,scope=binaries-manylinux-${{ matrix.build_arch }}
           outputs: type=docker,dest=/tmp/binaries-manylinux-${{ matrix.build_arch }}.tar
           tags: binaries-manylinux-${{ matrix.build_arch }}:latest
           target: binaries
@@ -130,7 +130,7 @@ jobs:
             BUILD_IMG=ghcr.io/bigcat88/cpa_py_bundles/musllinux_${{ matrix.build_arch }}:latest
           platforms: ${{ env.BUILD_PLATFORM }}
           push: false
-          cache-from: type=gha,scope=reelease-musllinux-${{ matrix.build_arch }}
+          cache-from: type=gha,scope=binaries-musllinux-${{ matrix.build_arch }}
           outputs: type=docker,dest=/tmp/binaries-musllinux-${{ matrix.build_arch }}.tar
           tags: binaries-musllinux-${{ matrix.build_arch }}:latest
           target: binaries
