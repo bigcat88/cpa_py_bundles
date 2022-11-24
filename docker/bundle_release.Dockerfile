@@ -14,4 +14,7 @@ COPY . /build
 
 RUN \
   cd build && \
-  python3 -m nuitka --plugin-enable=numpy --standalone --onefile ./python/main.py
+  python3 -m nuitka --plugin-enable=numpy --standalone --onefile ./python/main.py && \
+  cp main.bin /main.bin && \
+  cd / && \
+  rm -rf /build
