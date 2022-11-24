@@ -63,7 +63,8 @@ jobs:
 
       - name: Get Release Binaries
         run: |
-          gzip -9 -c ./main.bin > ${{ env.BIN_NAME }}.gz
+          mv ./main.bin ${{ env.BIN_NAME }}
+          gzip -9 -c ${{ env.BIN_NAME }} > ${{ env.BIN_NAME }}.gz
 #          docker load < /tmp/binaries-manylinux-${{ matrix.build_arch }}.tar
 #          id=$(docker create binaries-manylinux-${{ matrix.build_arch }}:latest)
 #          docker cp $id:/main.bin ${{ env.BIN_NAME }}
