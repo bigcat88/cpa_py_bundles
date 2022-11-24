@@ -60,7 +60,7 @@ jobs:
 
       - name: Get Release Binaries
         run: |
-          mv ./main.bin ${{ env.BIN_NAME }}
+          mv ./build/main.bin ${{ env.BIN_NAME }}
           gzip -9 -c ${{ env.BIN_NAME }} > ${{ env.BIN_NAME }}.gz
 
       - name: Uploading binary
