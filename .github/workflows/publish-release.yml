@@ -14,7 +14,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build_arch: [ "armv7", "arm64", "amd64" ]
+        build_arch: [ "amd64" ]
+#        build_arch: [ "armv7", "arm64", "amd64" ]
 
     steps:
       - uses: actions/checkout@v3
@@ -55,16 +56,18 @@ jobs:
           platforms: ${{ env.BUILD_PLATFORM }}
           push: false
           cache-from: type=gha,scope=binaries-manylinux-${{ matrix.build_arch }}
-          outputs: type=docker,dest=/tmp/binaries-manylinux-${{ matrix.build_arch }}.tar
-          tags: binaries-manylinux-${{ matrix.build_arch }}:latest
+#          outputs: type=docker,dest=/tmp/binaries-manylinux-${{ matrix.build_arch }}.tar
+          outputs: type=local,dest=./
+#          tags: binaries-manylinux-${{ matrix.build_arch }}:latest
           target: binaries
 
       - name: Get Release Binaries
         run: |
-          docker load < /tmp/binaries-manylinux-${{ matrix.build_arch }}.tar
-          id=$(docker create binaries-manylinux-${{ matrix.build_arch }}:latest)
-          docker cp $id:/main.bin ${{ env.BIN_NAME }}
-          gzip -9 -c ${{ env.BIN_NAME }} > ${{ env.BIN_NAME }}.gz
+          gzip -9 -c ./main.bin > ${{ env.BIN_NAME }}.gz
+#          docker load < /tmp/binaries-manylinux-${{ matrix.build_arch }}.tar
+#          id=$(docker create binaries-manylinux-${{ matrix.build_arch }}:latest)
+#          docker cp $id:/main.bin ${{ env.BIN_NAME }}
+#          gzip -9 -c ${{ env.BIN_NAME }} > ${{ env.BIN_NAME }}.gz
 
       - name: Uploading binary
         uses: actions/upload-artifact@v3
