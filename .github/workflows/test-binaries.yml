@@ -70,7 +70,7 @@ jobs:
       - name: Download binary
         run: |
           echo BIN_NAME="cpa_$BIN_TYPE" >> $GITHUB_ENV
-          wget https://github.com/bigcat88/cpa_py_bundles/releases/download/0.3.0-beta/$BIN_NAME.gz
+          wget https://github.com/bigcat88/cpa_py_bundles/releases/download/0.3.0-beta/cpa_$BIN_TYPE.gz
           gzip -d cpa_$BIN_TYPE.gz
 
       - name: Run tests
