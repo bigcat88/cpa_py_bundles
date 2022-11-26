@@ -1,10 +1,12 @@
 import argparse
 import sys
 
-from python.media_dc import get_tasks, process_task
-from python.media_dc.bundle_info import bundle_info
-from python.media_dc.log import logger as log
-from python.nc_py_api import CONFIG
+from nc_py_api import CONFIG
+
+from python.bundle_info import bundle_info
+from python.db_requests import get_tasks
+from python.log import logger as log
+from python.task import process_task
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Module for performing objects operations.", add_help=True)

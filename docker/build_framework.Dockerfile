@@ -23,6 +23,5 @@ RUN \
 
 FROM base as framework
 
-# Here will be simple: ``python3 -m pip install nc_py_api==0.1.0`` in future
 RUN \
-  python3 -m pip install --upgrade pg8000 pymysql
+  python3 -m pip install -i https://test.pypi.org/simple/ nc_py_api==0.0.1

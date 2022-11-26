@@ -6,10 +6,9 @@ from io import BytesIO
 from typing import Any
 
 import numpy
+from nc_py_api import get_file_data
 from pi_heif import register_heif_opener
 from PIL import Image, ImageOps
-
-from python.nc_py_api import get_file_data
 
 from .db_requests import store_err_image_hash, store_image_hash, store_task_files_group
 from .imagehash import average_hash, dhash, phash, whash

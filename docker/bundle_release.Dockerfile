@@ -1,7 +1,7 @@
 ARG BUILD_IMG
 FROM $BUILD_IMG as release
 
-COPY ./python/requirements.txt /
+COPY ./requirements.txt /
 
 RUN \
   python3 -m pip install -r requirements.txt && \
@@ -14,7 +14,7 @@ COPY . /build
 
 RUN \
   cd build && \
-  python3 -m nuitka --plugin-enable=numpy --standalone --onefile ./python/main.py && \
+  python3 -m nuitka --plugin-enable=numpy --standalone --onefile main.py && \
   cp main.bin /main.bin && \
   cd / && \
   rm -rf /build

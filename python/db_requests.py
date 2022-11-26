@@ -1,7 +1,7 @@
 import os
 from json import loads
 
-from python.nc_py_api import CONFIG, TABLES, execute_commit, execute_fetchall, get_time
+from nc_py_api import CONFIG, TABLES, execute_commit, execute_fetchall, get_time
 
 from .db_tables import MDC_TABLES
 

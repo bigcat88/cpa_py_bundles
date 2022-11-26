@@ -6,8 +6,7 @@ from json import dumps
 from typing import Any
 
 import numpy
-
-from python.nc_py_api import (
+from nc_py_api import (
     can_directly_access_file,
     get_file_full_path,
     request_file_from_php,

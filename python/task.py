@@ -6,7 +6,7 @@ from enum import Enum
 from pathlib import Path
 from time import perf_counter, sleep
 
-from python.nc_py_api import (
+from nc_py_api import (
     CONFIG,
     close_connection,
     get_mimetype_id,
