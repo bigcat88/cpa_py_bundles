@@ -24,4 +24,4 @@ RUN \
 FROM base as framework
 
 RUN \
-  python3 -m pip install -i https://test.pypi.org/simple/ nc_py_api==0.0.1
+  python3 -m pip install nc_py_api==0.0.5
