@@ -24,4 +24,4 @@ RUN \
 FROM base as framework
 
 RUN \
-  python3 -m pip install nc_py_api==0.0.5
+  python3 -m pip install nc_py_api==0.0.6

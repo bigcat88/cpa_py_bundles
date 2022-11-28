@@ -34,20 +34,6 @@ def stub_call_ff(app_name: str, *params, stdin_data: bytes = None, ignore_errors
         return None, f"{app_name} raised {type(exception_info).__name__}: {str(exception_info)}"
 
 
-def check_ff_app(app: str) -> bool:
-    """Returns a non-empty string on error, otherwise
-    returns an empty string and a tuple with the ffmpeg/probe version."""
-
-    result, err = stub_call_ff(app, "-version")
-    if err:
-        return False
-    full_reply = result.stdout.decode("utf-8")
-    if re.search(app + r"\sversion\s", full_reply, flags=re.MULTILINE + re.IGNORECASE) is not None:
-        return True
-    log.debug("Cant parse %s version: %s", app, full_reply)
-    return False
-
-
 def ffprobe_parse_results(proc_result) -> dict:
     """From `ffprobe` proc.stdout returns duration. If error during parse, then returns duration=0."""
 
@@ -105,7 +91,7 @@ def ffprobe_get_video_info(path, data) -> dict:
     else:
         raise ValueError("`path` or `data` argument must be specified.")
     if err:
-        print(err)
+        log.warning(err)
         return {}
     ret = ffprobe_parse_results(result)
     if path is None:
