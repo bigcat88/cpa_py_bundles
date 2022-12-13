@@ -1,28 +1,28 @@
-import fnmatch
 import math
-import os
 import threading
 from enum import Enum
-from pathlib import Path
 from time import perf_counter, sleep
 
 from nc_py_api import (
     CONFIG,
+    FsNodeInfo,
     close_connection,
+    fs_apply_exclude_lists,
+    fs_apply_ignore_flags,
+    fs_extract_sub_dirs,
+    fs_filter_by,
+    fs_list_directory,
+    fs_node_info,
     get_mimetype_id,
-    get_mounts_to,
-    get_paths_by_ids,
     get_time,
-    occ_call,
+    mimetype,
+    occ_call_decode,
 )
 
 from .db_requests import (
     append_task_error,
     clear_task_files_scanned_groups,
     finalize_task,
-    get_directory_data_image,
-    get_directory_data_video,
-    get_remote_filesize_limit,
     increase_processed_files_count,
     lock_task,
     set_task_keepalive,
@@ -52,9 +52,9 @@ def init_task_settings(task_info: dict) -> dict:
     excl_all = task_info["exclude_list"]
     task_settings["exclude_mask"] = list(dict.fromkeys(excl_all["user"]["mask"] + excl_all["admin"]["mask"]))
     task_settings["exclude_fileid"] = list(dict.fromkeys(excl_all["user"]["fileid"] + excl_all["admin"]["fileid"]))
-    task_settings["mime_dir"] = get_mimetype_id("'httpd/unix-directory'")
-    task_settings["mime_image"] = get_mimetype_id("'image'")
-    task_settings["mime_video"] = get_mimetype_id("'video'")
+    task_settings["mime_dir"] = get_mimetype_id("httpd/unix-directory")
+    task_settings["mime_image"] = get_mimetype_id("image")
+    task_settings["mime_video"] = get_mimetype_id("video")
     collector_settings = task_info["collector_settings"]
     task_settings["hash_size"] = collector_settings["hash_size"]
     task_settings["hash_algo"] = collector_settings["hashing_algorithm"]
@@ -79,7 +79,6 @@ def init_task_settings(task_info: dict) -> dict:
     task_settings["type"] = collector_settings["target_mtype"]
     task_settings["target_dirs"] = task_info["target_directory_ids"]
     task_settings["target_dirs"] = sorted(list(map(int, task_settings["target_dirs"])))
-    task_settings["remote_filesize_limit"] = get_remote_filesize_limit()
     return task_settings
 
 
@@ -180,127 +179,64 @@ def process_task(task_info) -> None:
         unlock_task(task_info["id"])
         log.debug("Task unlocked.")
         if task_info.get("collector_settings", {}).get("finish_notification", False):
-            occ_call("mediadc:collector:tasks:notify", str(task_info["id"]), _task_status)
+            occ_call_decode("mediadc:collector:tasks:notify", str(task_info["id"]), _task_status)
 
 
 def process_image_task(task_settings: dict) -> int:
     """Top Level function to process image task. As input param expects dict from `init_task_settings` function."""
 
-    directories_ids = task_settings["target_dirs"]
-    apply_exclude_list(get_paths_by_ids(directories_ids), task_settings, directories_ids)
-    process_image_task_dirs(directories_ids, task_settings)
+    fs_objs = fs_node_info(task_settings["target_dirs"])
+    fs_apply_exclude_lists(fs_objs, task_settings["exclude_fileid"], task_settings["exclude_mask"])
+    process_image_task_dirs(fs_objs, task_settings)
     return save_image_results(task_settings["id"])
 
 
-def process_image_task_dirs(directories_ids: list, task_settings: dict):
+def process_image_task_dirs(directories: list[FsNodeInfo], task_settings: dict):
     """Calls `process_directory_images` for each dir in `directories_ids`. Recursively does that for each sub dir."""
 
-    for dir_id in directories_ids:
-        process_image_task_dirs(process_directory_images(dir_id, task_settings), task_settings)
+    for directory in directories:
+        process_image_task_dirs(process_directory_images(directory, task_settings), task_settings)
+
+
+def process_directory_images(directory: FsNodeInfo, task_settings: dict) -> list[FsNodeInfo]:
+    """Process all files in `dir_id` with mimetype==mime_image and return list of sub dirs for this `dir_id`."""
+
+    fs_objs = fs_list_directory(directory["id"])
+    fs_apply_ignore_flags(fs_objs)
+    fs_apply_exclude_lists(fs_objs, task_settings["exclude_fileid"], task_settings["exclude_mask"])
+    sub_dirs = fs_extract_sub_dirs(fs_objs)
+    fs_filter_by(fs_objs, "mimepart", [mimetype.IMAGE])
+    process_images(task_settings, fs_objs)
+    if fs_objs:
+        increase_processed_files_count(task_settings["id"], len(fs_objs))
+    return sub_dirs
 
 
 def process_video_task(task_settings: dict, group_offset: int):
     """Top Level function to process video task. As input param expects dict from `init_task_settings` function."""
 
-    directories_ids = task_settings["target_dirs"]
-    apply_exclude_list(get_paths_by_ids(directories_ids), task_settings, directories_ids)
-    process_video_task_dirs(directories_ids, task_settings)
+    fs_objs = fs_node_info(task_settings["target_dirs"])
+    fs_apply_exclude_lists(fs_objs, task_settings["exclude_fileid"], task_settings["exclude_mask"])
+    process_video_task_dirs(fs_objs, task_settings)
     save_video_results(task_settings["id"], group_offset)
 
 
-def process_video_task_dirs(directories_ids: list, task_settings: dict):
+def process_video_task_dirs(directories: list[FsNodeInfo], task_settings: dict):
     """Calls `process_directory_videos` for each dir in `directories_ids`. Recursively does that for each sub dir."""
 
-    for dir_id in directories_ids:
-        process_video_task_dirs(process_directory_videos(dir_id, task_settings), task_settings)
+    for directory in directories:
+        process_video_task_dirs(process_directory_videos(directory, task_settings), task_settings)
 
 
-def process_directory_images(dir_id: int, task_settings: dict) -> list:
-    """Process all files in `dir_id` with mimetype==mime_image and return list of sub dirs for this `dir_id`."""
-
-    dir_info = get_paths_by_ids([dir_id])
-    file_mounts = []
-    if dir_info:
-        file_mounts = get_mounts_to(dir_info[0]["storage"], dir_info[0]["path"])
-    fs_records = get_directory_data_image(dir_id, task_settings["mime_dir"], task_settings["mime_image"], file_mounts)
-    if not fs_records:
-        return []
-    ignore_files = get_ignore_flag(fs_records)
-    apply_exclude_list(fs_records, task_settings)
-    sub_dirs = extract_sub_dirs(fs_records, task_settings["mime_dir"])
-    if ignore_files:
-        fs_records.clear()
-    process_images(task_settings, fs_records)
-    if fs_records:
-        increase_processed_files_count(task_settings["id"], len(fs_records))
-    return sub_dirs
-
-
-def process_directory_videos(dir_id: int, task_settings: dict) -> list:
+def process_directory_videos(directory: FsNodeInfo, task_settings: dict) -> list[FsNodeInfo]:
     """Process all files in `dir_id` with mimetype==mime_video and return list of sub dirs for this `dir_id`."""
 
-    dir_info = get_paths_by_ids([dir_id])
-    file_mounts = []
-    if dir_info:
-        file_mounts = get_mounts_to(dir_info[0]["storage"], dir_info[0]["path"])
-    fs_records = get_directory_data_video(dir_id, task_settings["mime_dir"], task_settings["mime_video"], file_mounts)
-    if not fs_records:
-        return []
-    ignore_files = get_ignore_flag(fs_records)
-    apply_exclude_list(fs_records, task_settings)
-    sub_dirs = extract_sub_dirs(fs_records, task_settings["mime_dir"])
-    if ignore_files:
-        fs_records.clear()
-    process_videos(task_settings, fs_records)
-    if fs_records:
-        increase_processed_files_count(task_settings["id"], len(fs_records))
+    fs_objs = fs_list_directory(directory["id"])
+    fs_apply_ignore_flags(fs_objs)
+    fs_apply_exclude_lists(fs_objs, task_settings["exclude_fileid"], task_settings["exclude_mask"])
+    sub_dirs = fs_extract_sub_dirs(fs_objs)
+    fs_filter_by(fs_objs, "mimepart", [mimetype.VIDEO])
+    process_videos(task_settings, fs_objs)
+    if fs_objs:
+        increase_processed_files_count(task_settings["id"], len(fs_objs))
     return sub_dirs
-
-
-def apply_exclude_list(fs_records: list, task_settings: dict, where_to_purge=None) -> list:
-    """Purge all records according to exclude_(mask/fileid) from `where_to_purge`(or from fs_records)."""
-
-    indexes_to_purge = []
-    for index, fs_record in enumerate(fs_records):
-        if fs_record["fileid"] in task_settings["exclude_fileid"]:
-            indexes_to_purge.append(index)
-        elif is_path_in_exclude(fs_record["path"], task_settings["exclude_mask"]):
-            indexes_to_purge.append(index)
-    if where_to_purge is None:
-        for index in reversed(indexes_to_purge):
-            del fs_records[index]
-    else:
-        for index in reversed(indexes_to_purge):
-            del where_to_purge[index]
-    return indexes_to_purge
-
-
-def extract_sub_dirs(fs_records: list, mime_dir: int) -> list:
-    """Removes all records from `fs_records` that has `mimetype`=='mime_dir' and returns them."""
-
-    sub_dirs = []
-    indexes_to_purge = []
-    for index, fs_record in enumerate(fs_records):
-        if fs_record["mimetype"] == mime_dir:
-            sub_dirs.append(fs_record["fileid"])
-            indexes_to_purge.append(index)
-    for index in reversed(indexes_to_purge):
-        del fs_records[index]
-    return sub_dirs
-
-
-def is_path_in_exclude(path: str, exclude_patterns: list) -> bool:
-    """Checks with fnmatch if `path` is in `exclude_patterns`. Returns ``True`` if yes."""
-
-    name = os.path.basename(path)
-    for pattern in exclude_patterns:
-        if fnmatch.fnmatch(name, pattern):
-            return True
-    return False
-
-
-def get_ignore_flag(fs_records: list) -> bool:
-    for fs_record in fs_records:
-        if Path(fs_record["path"]).name in (".noimage", ".nomedia"):
-            return True
-    return False

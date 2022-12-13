@@ -90,65 +90,33 @@ def set_task_keepalive(task_id: int, connection_id: int = 1) -> None:
     execute_commit(query, connection_id=connection_id)
 
 
-def get_remote_filesize_limit() -> int:
-    """Return `remote_filesize_limit` value from settings table."""
-
-    query = f"SELECT value FROM {MDC_TABLES.settings} WHERE name='remote_filesize_limit';"
-    result = execute_fetchall(query)
-    if not result:
-        return 0
-    if CONFIG["dbtype"] == "mysql" and isinstance(result[0]["value"], str):
-        return loads(result[0]["value"])
-    return result[0]["value"]
-
-
-def get_directory_data_image(dir_id: int, dir_mimetype: int, img_mimetype: int, spike_fileid: list) -> list:
-    """For dir_id returns list of records with mimetype specified by dir_mimetype or img_mimetype.
-    Record(dict) contains: fileid,path,storage,mimetype,size,mtime,encrypted,hash,skipped."""
-
-    mp_query = ""
-    if spike_fileid:
-        mp_query = f" OR fcache.fileid IN ({','.join(str(x) for x in spike_fileid)})"
+def get_images_caches(file_ids: list[int]) -> list:
     query = (
-        "SELECT fcache.fileid, fcache.path, fcache.storage, fcache.mimetype, fcache.size, fcache.mtime, "
-        "fcache.encrypted, "
-        "imgcache.hash, imgcache.skipped "
+        "SELECT fcache.fileid, imgcache.hash, imgcache.skipped "
         f"FROM {TABLES.file_cache} AS fcache "
         f"LEFT JOIN {MDC_TABLES.photos} AS imgcache "
         "ON fcache.fileid = imgcache.fileid AND fcache.mtime = imgcache.mtime "
-        f"WHERE (fcache.parent = {dir_id}{mp_query}) "
-        f"AND (fcache.mimetype = {dir_mimetype}"
-        f" OR fcache.mimepart = {img_mimetype}"
-        " OR fcache.name IN ('.nomedia', '.noimage'));"
+        f"WHERE fcache.fileid IN({','.join(str(x) for x in file_ids)}) "
+        "ORDER BY fileid ASC;"
     )
     return execute_fetchall(query)
 
 
-def get_directory_data_video(dir_id: int, dir_mimetype: int, video_mimetype: int, spike_fileid: list) -> list:
-    """For dir_id returns list of records with mimetype specified by dir_mimetype or video_mimetype.
-    Record(dict) contains: fileid,path,storage,mimetype,size,mtime,encrypted,duration,timestamps,hash,skipped."""
-
-    mp_query = ""
-    if spike_fileid:
-        mp_query = f" OR fcache.fileid IN ({','.join(str(x) for x in spike_fileid)})"
+def get_videos_caches(file_ids: list[int]) -> list:
     query = (
-        "SELECT fcache.fileid, fcache.path, fcache.storage, fcache.mimetype, fcache.size, fcache.mtime, "
-        "fcache.encrypted, "
-        "vcache.duration, vcache.timestamps, vcache.hash, vcache.skipped "
+        "SELECT fcache.fileid, vcache.duration, vcache.timestamps, vcache.hash, vcache.skipped "
         f"FROM {TABLES.file_cache} AS fcache "
         f"LEFT JOIN {MDC_TABLES.videos} AS vcache "
         "ON fcache.fileid = vcache.fileid AND fcache.mtime = vcache.mtime "
-        f"WHERE (fcache.parent = {dir_id}{mp_query}) "
-        f"AND (fcache.mimetype = {dir_mimetype}"
-        f" OR fcache.mimepart = {video_mimetype}"
-        " OR fcache.name IN ('.nomedia', '.noimage'));"
+        f"WHERE fcache.fileid IN({','.join(str(x) for x in file_ids)}) "
+        "ORDER BY fileid ASC;"
     )
-    dirs_list = execute_fetchall(query)
+    result = execute_fetchall(query)
     if CONFIG["dbtype"] == "mysql":
-        for each_dir in dirs_list:
-            if isinstance(each_dir["timestamps"], str):
-                each_dir["timestamps"] = loads(each_dir["timestamps"])
-    return dirs_list
+        for each_record in result:
+            if isinstance(each_record["timestamps"], str):
+                each_record["timestamps"] = loads(each_record["timestamps"])
+    return result
 
 
 def store_task_files_group(task_id: int, group_id: int, file_id: int) -> None:

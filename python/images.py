@@ -3,14 +3,19 @@ Images processing functions.
 """
 
 from io import BytesIO
-from typing import Any
+from typing import Any, Optional, Union
 
 import numpy
-from nc_py_api import get_file_data
+from nc_py_api import FsNodeInfo, fs_file_data, fs_sort_by_id
 from pi_heif import register_heif_opener
 from PIL import Image, ImageOps
 
-from .db_requests import store_err_image_hash, store_image_hash, store_task_files_group
+from .db_requests import (
+    get_images_caches,
+    store_err_image_hash,
+    store_image_hash,
+    store_task_files_group,
+)
 from .imagehash import average_hash, dhash, phash, whash
 from .log import logger as log
 
@@ -19,49 +24,54 @@ try:
 except ImportError:
     check_hexstrings_within_dist = None
 
+
+class MdcImageInfo(FsNodeInfo):
+    hash: Optional[Union[bytes, str]]
+    skipped: Optional[int]
+
+
 register_heif_opener()
 
 ImagesGroups: dict[int, list[int]] = {}
 SetOfGroups: list[Any] = []  # [flat_numpy_array1,flat_numpy_array2,flat_numpy_array3]
 
 
-def process_images(settings: dict, image_records: list):
-    for image_record in image_records:
-        if image_record["skipped"] is not None:
-            if image_record["skipped"] >= 2:
+def process_images(settings: dict, fs_objs: list[FsNodeInfo]):
+    mdc_images_info = load_images_caches(fs_objs)
+    for mdc_image_info in mdc_images_info:
+        if mdc_image_info["skipped"] is not None:
+            if mdc_image_info["skipped"] >= 2:
                 continue
-            if image_record["skipped"] != 0:
-                image_record["hash"] = None
+            if mdc_image_info["skipped"] != 0:
+                mdc_image_info["hash"] = None
         else:
-            image_record["skipped"] = 0
-        if image_record["hash"] is None:
-            log.debug("calculating hash for image: fileid = %u", image_record["fileid"])
-            image_record["hash"] = process_hash(
+            mdc_image_info["skipped"] = 0
+        if mdc_image_info["hash"] is None:
+            log.debug("calculating hash for image: fileid = %u", mdc_image_info["id"])
+            mdc_image_info["hash"] = process_hash(
                 settings["hash_algo"],
                 settings["hash_size"],
-                image_record,
-                settings["data_dir"],
-                settings["remote_filesize_limit"],
+                mdc_image_info,
             )
         else:
             if check_hexstrings_within_dist:
-                image_record["hash"] = image_record["hash"].hex()
+                mdc_image_info["hash"] = mdc_image_info["hash"].hex()
             else:
-                image_record["hash"] = arr_hash_from_bytes(image_record["hash"])
-        if image_record["hash"] is not None:
-            process_image_record(settings["precision_img"], image_record)
+                mdc_image_info["hash"] = arr_hash_from_bytes(mdc_image_info["hash"])
+        if mdc_image_info["hash"] is not None:
+            process_image_record(settings["precision_img"], mdc_image_info)
 
 
-def process_hash(algo: str, hash_size: int, image_info: dict, data_dir: str, remote_filesize_limit: int):
-    data = get_file_data(image_info, data_dir, remote_filesize_limit)
-    if len(data) == 0:
+def process_hash(algo: str, hash_size: int, mdc_img_info: MdcImageInfo):
+    data = fs_file_data(mdc_img_info)
+    if not data:
         return None
     hash_of_image = calc_hash(algo, hash_size, data)
     if hash_of_image is None:
-        store_err_image_hash(image_info["fileid"], image_info["mtime"], image_info["skipped"] + 1)
+        store_err_image_hash(mdc_img_info["id"], mdc_img_info["mtime"], mdc_img_info["skipped"] + 1)
         return None
     hash_str = arr_hash_to_string(hash_of_image)
-    store_image_hash(image_info["fileid"], hash_str, image_info["mtime"])
+    store_image_hash(mdc_img_info["id"], hash_str, mdc_img_info["mtime"])
     if check_hexstrings_within_dist:
         return hash_str
     return hash_of_image
@@ -82,20 +92,20 @@ def calc_hash(algo: str, hash_size: int, image_data: bytes):
     return image_hash.flatten()
 
 
-def process_image_record(precision: int, image_record: dict):
+def process_image_record(precision: int, mdc_img_info: MdcImageInfo):
     img_group_number = len(ImagesGroups)
     if check_hexstrings_within_dist:
         for i in range(img_group_number):
-            if check_hexstrings_within_dist(SetOfGroups[i], image_record["hash"], precision):
-                ImagesGroups[i].append((image_record["fileid"]))
+            if check_hexstrings_within_dist(SetOfGroups[i], mdc_img_info["hash"], precision):
+                ImagesGroups[i].append(mdc_img_info["id"])
                 return
     else:
         for i in range(img_group_number):
-            if numpy.count_nonzero(SetOfGroups[i] != image_record["hash"]) <= precision:
-                ImagesGroups[i].append((image_record["fileid"]))
+            if numpy.count_nonzero(SetOfGroups[i] != mdc_img_info["hash"]) <= precision:
+                ImagesGroups[i].append(mdc_img_info["id"])
                 return
-    SetOfGroups.append(image_record["hash"])
-    ImagesGroups[img_group_number] = [(image_record["fileid"])]
+    SetOfGroups.append(mdc_img_info["hash"])
+    ImagesGroups[img_group_number] = [mdc_img_info["id"]]
 
 
 def reset_images():
@@ -145,3 +155,11 @@ def hash_image_data(algo: str, hash_size: int, image_data: bytes):
     except Exception as exception_info:  # noqa # pylint: disable=broad-except
         log.debug("Exception during image processing:\n%s", str(exception_info))
         return None
+
+
+def load_images_caches(images: list[FsNodeInfo]) -> list[MdcImageInfo]:
+    if not images:
+        return []
+    images = fs_sort_by_id(images)
+    cache_records = get_images_caches([image["id"] for image in images])
+    return [images[i] | cache_records[i] for i in range(len(images))]

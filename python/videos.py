@@ -3,16 +3,17 @@ Videos processing functions.
 """
 
 from json import dumps
-from typing import Any
+from typing import Any, Optional, Union
 
 import numpy
-from nc_py_api import (
-    can_directly_access_file,
-    get_file_full_path,
-    request_file_from_php,
-)
+from nc_py_api import FsNodeInfo, fs_file_data, fs_sort_by_id
 
-from .db_requests import store_err_video_hash, store_task_files_group, store_video_hash
+from .db_requests import (
+    get_videos_caches,
+    store_err_video_hash,
+    store_task_files_group,
+    store_video_hash,
+)
 from .ffmpeg_probe import ffprobe_get_video_info, stub_call_ff
 from .images import arr_hash_from_bytes, arr_hash_to_string, calc_hash
 from .log import logger as log
@@ -21,6 +22,13 @@ try:
     from hexhamming import check_hexstrings_within_dist
 except ImportError:
     check_hexstrings_within_dist = None
+
+
+class MdcVideoInfo(FsNodeInfo):
+    hash: Optional[Union[bytes, str]]
+    duration: Optional[int]
+    timestamps: Optional[list[int]]
+    skipped: Optional[int]
 
 
 class InvalidVideo(Exception):
@@ -33,47 +41,46 @@ MIN_VIDEO_DURATION = 3000
 FIRST_FRAME_RESOLUTION = 64
 
 
-def process_videos(settings: dict, video_records: list):
-    for video_record in video_records:
-        if video_record["skipped"] is not None:
-            if video_record["skipped"] >= 2:
+def process_videos(settings: dict, fs_objs: list[FsNodeInfo]):
+    mdc_videos_info = load_videos_caches(fs_objs)
+    for mdc_video_info in mdc_videos_info:
+        if mdc_video_info["skipped"] is not None:
+            if mdc_video_info["skipped"] >= 2:
                 continue
-            if video_record["skipped"] != 0:
-                video_record["hash"] = None
+            if mdc_video_info["skipped"] != 0:
+                mdc_video_info["hash"] = None
         else:
-            video_record["skipped"] = 0
-        if video_record["hash"] is None:
-            log.debug("processing video: fileid = %u", video_record["fileid"])
+            mdc_video_info["skipped"] = 0
+        if mdc_video_info["hash"] is None:
+            log.debug("processing video: fileid = %u", mdc_video_info["id"])
             process_video_hash(
                 settings["hash_algo"],
                 settings["hash_size"],
-                video_record,
-                settings["data_dir"],
-                settings["remote_filesize_limit"],
+                mdc_video_info,
             )
         else:
             if check_hexstrings_within_dist:
-                video_record["hash"] = video_record["hash"].hex()
+                mdc_video_info["hash"] = mdc_video_info["hash"].hex()
             else:
-                video_record["hash"] = arr_hash_from_bytes(video_record["hash"])
-        if video_record["hash"] is not None:
-            process_video_record(settings["precision_vid"], video_record)
+                mdc_video_info["hash"] = arr_hash_from_bytes(mdc_video_info["hash"])
+        if mdc_video_info["hash"] is not None:
+            process_video_record(settings["precision_vid"], mdc_video_info)
 
 
-def process_video_record(precision: int, video_record: dict):
+def process_video_record(precision: int, mdc_video_info: MdcVideoInfo):
     video_group_number = len(VideoGroups)
     if check_hexstrings_within_dist:
         for i in range(video_group_number):
-            if check_hexstrings_within_dist(SetOfGroups[i], video_record["hash"], precision):
-                VideoGroups[i].append((video_record["fileid"]))
+            if check_hexstrings_within_dist(SetOfGroups[i], mdc_video_info["hash"], precision):
+                VideoGroups[i].append(mdc_video_info["id"])
                 return
     else:
         for i in range(video_group_number):
-            if numpy.count_nonzero(SetOfGroups[i] != video_record["hash"]) <= precision:
-                VideoGroups[i].append((video_record["fileid"]))
+            if numpy.count_nonzero(SetOfGroups[i] != mdc_video_info["hash"]) <= precision:
+                VideoGroups[i].append(mdc_video_info["id"])
                 return
-    SetOfGroups.append(video_record["hash"])
-    VideoGroups[video_group_number] = [(video_record["fileid"])]
+    SetOfGroups.append(mdc_video_info["hash"])
+    VideoGroups[video_group_number] = [mdc_video_info["id"]]
 
 
 def reset_videos():
@@ -81,43 +88,38 @@ def reset_videos():
     SetOfGroups.clear()
 
 
-def process_video_hash(algo: str, hash_size: int, file_info: dict, data_dir: str, remote_filesize_limit: int):
-    video_info = {}
+def process_video_hash(algo: str, hash_size: int, mdc_video_info: MdcVideoInfo):
+    ff_info = {}
     try:
         while True:
-            if not can_directly_access_file(file_info):
+            if not mdc_video_info["direct_access"]:
                 break
-            full_path = get_file_full_path(data_dir, file_info["storage"], file_info["path"])
-            if not full_path:
+            ff_info = ffprobe_get_video_info(mdc_video_info["abs_path"], None)
+            if not ff_info:
                 break
-            video_info = ffprobe_get_video_info(full_path, None)
-            if not video_info:
-                break
-            if not do_hash_video(algo, hash_size, video_info, file_info, full_path, None):
+            if not do_hash_video(algo, hash_size, ff_info, mdc_video_info, mdc_video_info["abs_path"], None):
                 raise InvalidVideo
             return
-        if file_info["size"] > remote_filesize_limit:
+        if mdc_video_info["name"].lower().endswith((".mkv",)):
             return
-        if file_info["path"].lower().endswith((".mkv",)):
-            return
-        data = request_file_from_php(file_info)
+        data = fs_file_data(mdc_video_info)
         if len(data) == 0:
             return
-        video_info = ffprobe_get_video_info(None, data)
-        if not video_info.get("fast_start", False):
+        ff_info = ffprobe_get_video_info(None, data)
+        if not ff_info.get("fast_start", False):
             raise InvalidVideo
-        if not do_hash_video(algo, hash_size, video_info, file_info, None, data):
+        if not do_hash_video(algo, hash_size, ff_info, mdc_video_info, None, data):
             raise InvalidVideo
     except Exception as exception_info:  # noqa # pylint: disable=broad-except
         store_err_video_hash(
-            file_info["fileid"], video_info.get("duration", 0), file_info["mtime"], file_info["skipped"] + 1
+            mdc_video_info["id"], ff_info.get("duration", 0), mdc_video_info["mtime"], mdc_video_info["skipped"] + 1
         )
         exception_name = type(exception_info).__name__
         if exception_name != "InvalidVideo":
-            log.debug("Exception during video processing:\n%s\n%s", file_info["path"], str(exception_info))
+            log.debug("Exception in video processing:\n%s\n%s", mdc_video_info["internal_path"], str(exception_info))
 
 
-def do_hash_video(algo: str, hash_size: int, video_info: dict, file_info: dict, path, data) -> bool:
+def do_hash_video(algo: str, hash_size: int, video_info: dict, mdc_video_info: MdcVideoInfo, path, data) -> bool:
     """Accepts path(bytes/str) or data for processing in memory."""
 
     if video_info["duration"] < MIN_VIDEO_DURATION:
@@ -148,13 +150,13 @@ def do_hash_video(algo: str, hash_size: int, video_info: dict, file_info: dict, 
     hashes = numpy.concatenate((hashes_l[0], hashes_l[1], hashes_l[2], hashes_l[3]), axis=0)
     hashes_str = arr_hash_to_string(hashes)
     if check_hexstrings_within_dist:
-        file_info["hash"] = hashes_str
+        mdc_video_info["hash"] = hashes_str
     else:
-        file_info["hash"] = hashes
-    file_info["timestamps"] = frames_timestamps
-    file_info["duration"] = video_info["duration"]
+        mdc_video_info["hash"] = hashes
+    mdc_video_info["timestamps"] = frames_timestamps
+    mdc_video_info["duration"] = video_info["duration"]
     store_video_hash(
-        file_info["fileid"], video_info["duration"], dumps(frames_timestamps), hashes_str, file_info["mtime"]
+        mdc_video_info["id"], video_info["duration"], dumps(frames_timestamps), hashes_str, mdc_video_info["mtime"]
     )
     return True
 
@@ -325,3 +327,11 @@ def save_video_results(task_id: int, group_offset: int):
         for file_id in files_id:
             store_task_files_group(task_id, n_group, file_id)
         n_group += 1
+
+
+def load_videos_caches(images: list[FsNodeInfo]) -> list[MdcVideoInfo]:
+    if not images:
+        return []
+    images = fs_sort_by_id(images)
+    cache_records = get_videos_caches([image["id"] for image in images])
+    return [images[i] | cache_records[i] for i in range(len(images))]

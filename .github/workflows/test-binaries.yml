@@ -1,4 +1,4 @@
-name: Binaries test
+name: Test binaries
 
 on:
   workflow_dispatch:
@@ -69,8 +69,8 @@ jobs:
 
       - name: Download binary
         run: |
-          echo BIN_NAME="cpa_$BIN_TYPE" >> $GITHUB_ENV
-          wget https://github.com/bigcat88/cpa_py_bundles/releases/download/0.3.0-beta/cpa_$BIN_TYPE.gz
+          echo BIN_NAME="mediadc_$BIN_TYPE" >> $GITHUB_ENV
+          wget https://github.com/bigcat88/cpa_py_bundles/releases/download/0.3.0/mediadc_$BIN_TYPE.gz
           gzip -d cpa_$BIN_TYPE.gz
 
       - name: Run tests
@@ -79,4 +79,4 @@ jobs:
             --platform linux/${{ matrix.i.arch }} \
             --build-arg BASE_IMAGE="${{ matrix.i['os'] }}:${{ matrix.i['ver'] }}" \
             --build-arg BIN_NAME="${{ env.BIN_NAME }}" \
-            -f docker/test_release2.Dockerfile .
+            -f docker/test_release_full.Dockerfile .
