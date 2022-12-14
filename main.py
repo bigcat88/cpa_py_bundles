@@ -2,9 +2,12 @@ import argparse
 import sys
 
 from nc_py_api import CONFIG
+from numpy import count_nonzero
+from PIL import Image, ImageOps
 
 from python.bundle_info import bundle_info
 from python.db_requests import get_tasks
+from python.images import pil_to_hash
 from python.log import logger as log
 from python.task import process_task
 
@@ -21,6 +24,9 @@ if __name__ == "__main__":
     group.add_argument(
         "--info", dest="bundle_info", action="store_true", help="Print information about bundled packages."
     )
+    group.add_argument(
+        "--test", dest="test", type=str, action="append", help="Performs a comparison of two files. Specify twice."
+    )
     args = parser.parse_args()
     if args.bundle_info:
         bundle_info()
@@ -35,6 +41,13 @@ if __name__ == "__main__":
             log.warning("Cant find task with id=%u", x)
         for i in tasks_to_process:
             process_task(i)
+    elif args.test:
+        for algo in ("phash", "dhash", "whash", "average"):
+            img_hashes = [
+                pil_to_hash(algo, 16, ImageOps.exif_transpose(Image.open(args.test[0]))).flatten(),
+                pil_to_hash(algo, 16, ImageOps.exif_transpose(Image.open(args.test[1]))).flatten(),
+            ]
+            print(f"hamming distance({algo}): {count_nonzero(img_hashes[0] != img_hashes[1])}")
     else:
         parser.print_help()
     sys.exit(0)
