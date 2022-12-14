@@ -9,4 +9,5 @@ RUN \
   cd /cpa && \
   ls -la . && \
   chmod +x $BIN_NAME && \
-  ./$BIN_NAME --info
+  ./$BIN_NAME --info && \
+  ./$BIN_NAME --test ./tests/cat.hif --test ./tests/cat.png
