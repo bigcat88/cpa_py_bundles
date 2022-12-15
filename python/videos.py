@@ -322,7 +322,7 @@ def remove_solo_groups():
 def save_video_results(task_id: int, group_offset: int):
     remove_solo_groups()
     log.debug("Videos: Number of groups: %u", len(VideoGroups))
-    n_group = group_offset
+    n_group = group_offset if group_offset else 1
     for files_id in VideoGroups.values():
         for file_id in files_id:
             store_task_files_group(task_id, n_group, file_id)
