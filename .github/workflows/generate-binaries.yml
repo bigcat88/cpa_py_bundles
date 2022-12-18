@@ -41,8 +41,8 @@ jobs:
 
       - name: Set up Nextcloud
         run: |
-          sudo echo "[client-server]" >> /etc/mysql/my.cnf
-          sudo echo "port = 3307" >> /etc/mysql/my.cnf
+          sudo bash -c "echo '[client-server]' >> /etc/mysql/my.cnf"
+          sudo bash -c "echo 'port = 3307' >> /etc/mysql/my.cnf"
           sudo systemctl start mysql.service
           cat /etc/mysql/my.cnf
           ls -la /var/run/mysqld/mysqld.sock
