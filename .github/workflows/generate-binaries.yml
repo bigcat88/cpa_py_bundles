@@ -43,12 +43,14 @@ jobs:
         run: |
           sudo ls -la /etc/mysql/conf.d/
           sudo ls -la /etc/mysql/mysql.conf.d/
-
+          sudo cat /etc/mysql/mysql.conf.d/mysql.cnf
+          echo "==="
+          sudo cat /etc/mysql/mysql.conf.d/mysqld.cnf
           sudo bash -c "echo '[client-server]' >> /etc/mysql/my.cnf"
           sudo bash -c "echo 'port = 3307' >> /etc/mysql/my.cnf"
           netstat -tulpn | grep LISTEN
           sudo systemctl restart mysql.service
-          cat /etc/mysql/my.cnf
+          sudo cat /etc/mysql/my.cnf
           ls -la /var/run/mysqld/mysqld.sock
           netstat -tulpn | grep LISTEN
 
