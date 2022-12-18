@@ -24,37 +24,33 @@ jobs:
           php-version: '8.0'
           extensions: mbstring, fileinfo, intl, pdo_mysql, zip, gd
 
-#      - uses: actions/setup-python@v4
-#        with:
-#          python-version: '3.9'
-#
-#      - name: cache-nextcloud
-#        id: nextcloud_setup
-#        uses: actions/cache@v3
-#        with:
-#          path: nextcloud-${{ matrix.nextcloud }}.tar.bz2
-#          key: ${{ matrix.nextcloud }}
-#
-#      - name: Download Nextcloud
-#        if: steps.nextcloud_setup.outputs.cache-hit != 'true'
-#        run: wget -q https://download.nextcloud.com/server/releases/nextcloud-${{ matrix.nextcloud }}.tar.bz2
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: cache-nextcloud
+        id: nextcloud_setup
+        uses: actions/cache@v3
+        with:
+          path: nextcloud-${{ matrix.nextcloud }}.tar.bz2
+          key: ${{ matrix.nextcloud }}
+
+      - name: Download Nextcloud
+        if: steps.nextcloud_setup.outputs.cache-hit != 'true'
+        run: wget -q https://download.nextcloud.com/server/releases/nextcloud-${{ matrix.nextcloud }}.tar.bz2
 
       - name: Set up Nextcloud
         run: |
-          sudo ls -la /etc/mysql/conf.d/
-          sudo ls -la /etc/mysql/mysql.conf.d/
-          cat /etc/mysql/mysql.conf.d/mysqld.cnf
           sudo sed -i "s/.*port.*3306.*/port = 3307/" /etc/mysql/mysql.conf.d/mysqld.cnf
-          cat /etc/mysql/mysql.conf.d/mysqld.cnf
-          netstat -tulpn | grep LISTEN
           sudo systemctl restart mysql.service
-          sudo cat /etc/mysql/my.cnf
-          ls -la /var/run/mysqld/mysqld.sock
-          netstat -tulpn | grep LISTEN
-
-#          error
-#          tar -xjf nextcloud-${{ matrix.nextcloud }}.tar.bz2 --strip-components 1
-#          mkdir data
+          sudo mysql -e "show databases;"
+          sudo mysql -e "CREATE USER 'adm'@'localhost' IDENTIFIED BY 'adm';"
+          sudo mysql -e "CREATE DATABASE IF NOT EXISTS nextcloud CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
+          sudo mysql -e "GRANT ALL PRIVILEGES ON nextcloud.* TO 'adm'@'localhost';"
+          sudo mysql -e "FLUSH PRIVILEGES;"
+          sudo mysql -e "show databases;"
+          tar -xjf nextcloud-${{ matrix.nextcloud }}.tar.bz2 --strip-components 1
+          mkdir data
 #          php occ maintenance:install --verbose --database=mysql --database-name=nextcloud \
 #          --database-host=127.0.0.1 --database-user=root --database-pass=rootpassword \
 #          --admin-user admin --admin-pass adminpassword
