@@ -44,7 +44,7 @@ jobs:
           sudo ls -la /etc/mysql/conf.d/
           sudo ls -la /etc/mysql/mysql.conf.d/
           sudo cat /etc/mysql/mysql.conf.d/mysql.cnf
-          sed -i "s/.*port.*3306.*/port = 3307/" /etc/mysql/mysql.conf.d/mysql.cnf
+          sudo sed -i "s/.*port.*3306.*/port = 3307/" /etc/mysql/mysql.conf.d/mysql.cnf
           sudo cat /etc/mysql/mysql.conf.d/mysql.cnf
           netstat -tulpn | grep LISTEN
           sudo systemctl restart mysql.service
