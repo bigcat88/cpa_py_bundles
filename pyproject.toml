@@ -1,6 +1,6 @@
 [tool.coverage.run]
 cover_pylib = true
-include = ["*/cloud_py_api/*"]
+include = ["*/python/*"]
 omit = ["*/tests/*"]
 
 [tool.coverage.report]

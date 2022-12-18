@@ -1,8 +1,7 @@
-pg8000
-pymysql
 numpy
 scipy
 pywavelets
 pillow
-pi-heif
 hexhamming
+nc-py-api>=0.0.7
+pi-heif>=0.9.0

@@ -2,10 +2,14 @@ name: Test binaries
 
 on:
   workflow_dispatch:
+    inputs:
+      test_args:
+        required: false
+        type: string
+
 
 jobs:
   docker-tests:
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     name: 🐍 • ${{ matrix.i['os'] }} • ${{ matrix.i['ver'] }} • ${{ matrix.i['arch'] }}
     runs-on: ubuntu-latest
     strategy:
@@ -67,11 +71,13 @@ jobs:
         if: matrix.i['os'] == 'alpine' && matrix.i['arch'] == 'arm/v7'
         run: echo BIN_TYPE="musllinux_armv7" >> $GITHUB_ENV
 
-      - name: Download binary
+      - name: Preparations
         run: |
-          echo BIN_NAME="mediadc_$BIN_TYPE" >> $GITHUB_ENV
-          wget https://github.com/bigcat88/cpa_py_bundles/releases/download/0.3.0/mediadc_$BIN_TYPE.gz
-          gzip -d mediadc_$BIN_TYPE.gz
+          APP_ID="$(sed -n "s/<id>\(.*\)<\/id>/\\1/p" ./appinfo/info.xml | tr -d '\t' | sed -n 1p)"
+          APP_VERSION="$(sed -n "s/<version>\(.*\)<\/version>/\\1/p" ./appinfo/info.xml | tr -d '\t' | sed -n 1p)"
+          echo BIN_NAME="$APP_ID"_"$BIN_TYPE" >> $GITHUB_ENV
+          wget $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/download/BIN_NAME.gz
+          gzip -d $BIN_NAME.gz
 
       - name: Run tests
         run: |
@@ -79,4 +85,5 @@ jobs:
             --platform linux/${{ matrix.i.arch }} \
             --build-arg BASE_IMAGE="${{ matrix.i['os'] }}:${{ matrix.i['ver'] }}" \
             --build-arg BIN_NAME="${{ env.BIN_NAME }}" \
+            --build-arg TEST_ARGS="${{ inputs.test_args }}" \
             -f docker/test_release_full.Dockerfile .

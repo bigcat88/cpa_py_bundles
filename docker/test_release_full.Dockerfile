@@ -1,13 +1,13 @@
 ARG BASE_IMAGE
 FROM $BASE_IMAGE
 
-COPY . /cpa
+COPY . /test
 
 ARG BIN_NAME
+ARG TEST_ARGS
 
 RUN \
-  cd /cpa && \
+  cd /test && \
   ls -la . && \
   chmod +x $BIN_NAME && \
-  ./$BIN_NAME --info && \
-  ./$BIN_NAME --test ./tests/cat.hif --test ./tests/cat.png
+  ./$BIN_NAME TEST_ARGS
