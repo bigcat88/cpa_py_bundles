@@ -43,15 +43,16 @@ jobs:
         run: |
           sudo bash -c "echo '[client-server]' >> /etc/mysql/my.cnf"
           sudo bash -c "echo 'port = 3307' >> /etc/mysql/my.cnf"
-          sudo systemctl start mysql.service
+          netstat -tulpn | grep LISTEN
+          sudo systemctl restart mysql.service
           cat /etc/mysql/my.cnf
           ls -la /var/run/mysqld/mysqld.sock
           netstat -tulpn | grep LISTEN
-          error
-          tar -xjf nextcloud-${{ matrix.nextcloud }}.tar.bz2 --strip-components 1
-          mkdir data
-          php occ maintenance:install --verbose --database=mysql --database-name=nextcloud \
-          --database-host=127.0.0.1 --database-user=root --database-pass=rootpassword \
-          --admin-user admin --admin-pass adminpassword
-          php occ config:system:set debug --value=true --type=boolean
-          php -S localhost:8080 &
+#          error
+#          tar -xjf nextcloud-${{ matrix.nextcloud }}.tar.bz2 --strip-components 1
+#          mkdir data
+#          php occ maintenance:install --verbose --database=mysql --database-name=nextcloud \
+#          --database-host=127.0.0.1 --database-user=root --database-pass=rootpassword \
+#          --admin-user admin --admin-pass adminpassword
+#          php occ config:system:set debug --value=true --type=boolean
+#          php -S localhost:8080 &
