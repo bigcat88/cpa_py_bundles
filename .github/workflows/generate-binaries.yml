@@ -1,6 +1,7 @@
 name: dev
 
 on:
+  workflow_dispatch:
 
 env:
   APP_NAME: cloud_py_api
