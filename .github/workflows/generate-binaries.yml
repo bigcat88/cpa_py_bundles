@@ -24,23 +24,26 @@ jobs:
           php-version: '8.0'
           extensions: mbstring, fileinfo, intl, pdo_mysql, zip, gd
 
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-
-      - name: cache-nextcloud
-        id: nextcloud_setup
-        uses: actions/cache@v3
-        with:
-          path: nextcloud-${{ matrix.nextcloud }}.tar.bz2
-          key: ${{ matrix.nextcloud }}
-
-      - name: Download Nextcloud
-        if: steps.nextcloud_setup.outputs.cache-hit != 'true'
-        run: wget -q https://download.nextcloud.com/server/releases/nextcloud-${{ matrix.nextcloud }}.tar.bz2
+#      - uses: actions/setup-python@v4
+#        with:
+#          python-version: '3.9'
+#
+#      - name: cache-nextcloud
+#        id: nextcloud_setup
+#        uses: actions/cache@v3
+#        with:
+#          path: nextcloud-${{ matrix.nextcloud }}.tar.bz2
+#          key: ${{ matrix.nextcloud }}
+#
+#      - name: Download Nextcloud
+#        if: steps.nextcloud_setup.outputs.cache-hit != 'true'
+#        run: wget -q https://download.nextcloud.com/server/releases/nextcloud-${{ matrix.nextcloud }}.tar.bz2
 
       - name: Set up Nextcloud
         run: |
+          sudo ls -la /etc/mysql/conf.d/
+          sudo ls -la /etc/mysql/mysql.conf.d/
+
           sudo bash -c "echo '[client-server]' >> /etc/mysql/my.cnf"
           sudo bash -c "echo 'port = 3307' >> /etc/mysql/my.cnf"
           netstat -tulpn | grep LISTEN
@@ -48,6 +51,7 @@ jobs:
           cat /etc/mysql/my.cnf
           ls -la /var/run/mysqld/mysqld.sock
           netstat -tulpn | grep LISTEN
+
 #          error
 #          tar -xjf nextcloud-${{ matrix.nextcloud }}.tar.bz2 --strip-components 1
 #          mkdir data
